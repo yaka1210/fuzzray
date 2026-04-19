@@ -62,9 +62,6 @@ uv run fuzzray --afl-out ./out --target ./build/vuln -o report.html
 
 # Fast mode — static classification only, no gdb replay
 uv run fuzzray --afl-out ./out --no-replay -o report.html
-
-# With PDF
-uv run fuzzray --afl-out ./out --target ./vuln --pdf -o report.html
 ```
 
 ## Validate on the built-in target
@@ -90,9 +87,8 @@ src/fuzzray/
 │   ├── taxonomy.py
 │   └── exploitability.py
 ├── prioritizer.py       # Module 4 — severity scoring
-└── reporter/            # Module 5 — Jinja2 HTML + SVG + PDF
+└── reporter/            # Module 5 — Jinja2 HTML + SVG chart
     ├── html.py
-    ├── pdf.py
     ├── svg_chart.py
     └── templates/report.html.j2
 ```

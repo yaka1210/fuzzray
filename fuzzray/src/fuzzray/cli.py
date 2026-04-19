@@ -17,7 +17,6 @@ def main(
     target: Annotated[Path | None, typer.Option("--target", help="Целевой бинарник для gdb-воспроизведения")] = None,
     target_args: Annotated[str, typer.Option("--target-args", help="Шаблон аргументов цели, @@ = путь к входу")] = "@@",
     no_replay: Annotated[bool, typer.Option("--no-replay", help="Без gdb-воспроизведения, только статическая классификация")] = False,
-    pdf: Annotated[bool, typer.Option("--pdf", help="Дополнительно сгенерировать PDF")] = False,
     jobs: Annotated[int, typer.Option("-j", "--jobs", help="Число параллельных gdb-воспроизведений")] = 0,
 ) -> None:
     """Генерация HTML-отчёта FuzzRay по выходному каталогу AFL++."""
@@ -29,7 +28,6 @@ def main(
         target=target,
         target_args=target_args,
         no_replay=no_replay,
-        pdf=pdf,
         jobs=jobs,
     )
 

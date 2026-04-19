@@ -11,6 +11,7 @@ from fuzzray.classifier.cwe_rules import (
     build_dynamic_recommendation,
 )
 from fuzzray.models import Crash, Report
+from fuzzray.reporter.svg_chart import render_crashes_over_time
 
 _TEMPLATE_DIR = Path(__file__).parent / "templates"
 
@@ -120,6 +121,8 @@ def render_html(report: Report) -> str:
     cwe_recs: list[str] = [_build_recommendation(c) for c in cwe_crashes]
     error_recs: list[str] = [_build_recommendation(c) for c in error_crashes]
 
+    crashes_chart = render_crashes_over_time(report.plot_points)
+
     return tpl.render(
         report=report,
         cwe_crashes=cwe_crashes,
@@ -130,4 +133,5 @@ def render_html(report: Report) -> str:
         by_site=by_site.most_common(),
         by_region=by_region.most_common(),
         by_exploit=by_exploit.most_common(),
+        crashes_chart=crashes_chart,
     )

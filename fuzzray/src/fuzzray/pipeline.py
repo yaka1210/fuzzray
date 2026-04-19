@@ -22,7 +22,6 @@ def run_pipeline(
     target: Path | None,
     target_args: str,
     no_replay: bool,
-    pdf: bool,
     jobs: int,
 ) -> None:
     console.print(f"[bold cyan]FuzzRay[/] сканирование [yellow]{afl_out}[/]")
@@ -67,10 +66,3 @@ def run_pipeline(
     html = render_html(report)
     output.write_text(html, encoding="utf-8")
     console.print(f"[bold green]записан[/] {output}")
-
-    if pdf:
-        from fuzzray.reporter.pdf import render_pdf
-
-        pdf_path = output.with_suffix(".pdf")
-        render_pdf(html, pdf_path)
-        console.print(f"[bold green]записан[/] {pdf_path}")

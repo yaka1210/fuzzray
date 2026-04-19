@@ -198,6 +198,14 @@
   </div>
 </div>
 
+<!-- ===== Crashes over time chart ===== -->
+{% if crashes_chart %}
+<h2>Динамика обнаружения крашей</h2>
+<div style="background: var(--bg3); border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin-bottom: 24px; overflow-x: auto;">
+  {{ crashes_chart | safe }}
+</div>
+{% endif %}
+
 <!-- =============================================================== -->
 <!--  SECTION 1: CWE — Критические уязвимости                       -->
 <!-- =============================================================== -->
