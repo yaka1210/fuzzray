@@ -16,7 +16,6 @@ _RULES: list[tuple[re.Pattern[str], str, float]] = [
     (re.compile(r"unsigned-integer-overflow", re.I), "CWE-190", 0.9),
     (re.compile(r"integer-divide-by-zero", re.I), "CWE-369", 0.97),
     (re.compile(r"use-of-uninitialized-value", re.I), "CWE-457", 0.95),
-    (re.compile(r"detected memory leaks", re.I), "CWE-401", 0.9),
 ]
 
 _MEMORY_REGION_RE = re.compile(

@@ -33,15 +33,17 @@ _UD_INSN_RE = re.compile(r"ud[12]\s+(?:0x([0-9a-f]+))?\(", re.I)
 _UBSAN_HANDLER_CWE: dict[int, tuple[str, float]] = {
     0:  ("CWE-190", 0.75),   # AddOverflow
     3:  ("CWE-369", 0.8),    # DivremOverflow
-    5:  ("CWE-190", 0.7),    # FloatCastOverflow
-    7:  ("CWE-190", 0.65),   # ImplicitConversion
+    5:  ("CWE-681", 0.7),    # FloatCastOverflow — float→int conversion
+    7:  ("CWE-681", 0.65),   # ImplicitConversion — lossy type conversion
+    10: ("CWE-457", 0.7),    # LoadInvalidValue — invalid bool/enum
     12: ("CWE-190", 0.75),   # MulOverflow
     13: ("CWE-190", 0.7),    # NegateOverflow
-    18: ("CWE-787", 0.7),    # OutOfBounds
-    19: ("CWE-476", 0.75),   # PointerOverflow (NULL + offset → null deref)
+    16: ("CWE-476", 0.7),    # NonnullArg — null passed to nonnull param
+    18: ("CWE-787", 0.7),    # OutOfBounds — array index OOB
+    19: ("CWE-476", 0.75),   # PointerOverflow — NULL + offset
     20: ("CWE-190", 0.7),    # ShiftOutOfBounds
     21: ("CWE-190", 0.75),   # SubOverflow
-    22: ("CWE-476", 0.7),    # TypeMismatch (includes null deref)
+    22: ("CWE-476", 0.7),    # TypeMismatch — null deref / alignment
 }
 
 

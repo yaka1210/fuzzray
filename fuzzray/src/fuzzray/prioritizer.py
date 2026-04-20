@@ -13,9 +13,9 @@ _CWE_BASE: dict[str, int] = {
     "CWE-119": 7,
     "CWE-476": 5,
     "CWE-190": 5,
+    "CWE-681": 5,
     "CWE-369": 5,
     "CWE-457": 5,
-    "CWE-401": 2,
 }
 
 _EXPLOIT_MULT: dict[str, float] = {
