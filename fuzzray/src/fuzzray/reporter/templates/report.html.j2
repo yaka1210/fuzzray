@@ -188,14 +188,30 @@
     <div class="n">{{ report.unique_count }}</div>
     <div class="l">уникальных</div>
   </div>
+  {% if sev_counts.get('CRITICAL', 0) > 0 %}
   <div class="stat-box crit">
-    <div class="n">{{ cwe_crashes|length }}</div>
-    <div class="l">уязвимостей (CWE)</div>
+    <div class="n">{{ sev_counts['CRITICAL'] }}</div>
+    <div class="l">critical</div>
   </div>
+  {% endif %}
+  {% if sev_counts.get('HIGH', 0) > 0 %}
   <div class="stat-box high">
-    <div class="n">{{ error_crashes|length }}</div>
-    <div class="l">ошибок выполнения</div>
+    <div class="n">{{ sev_counts['HIGH'] }}</div>
+    <div class="l">high</div>
   </div>
+  {% endif %}
+  {% if sev_counts.get('MEDIUM', 0) > 0 %}
+  <div class="stat-box" style="border-color: var(--med);">
+    <div class="n" style="color: var(--med);">{{ sev_counts['MEDIUM'] }}</div>
+    <div class="l">medium</div>
+  </div>
+  {% endif %}
+  {% if sev_counts.get('LOW', 0) > 0 %}
+  <div class="stat-box" style="border-color: var(--low);">
+    <div class="n" style="color: var(--low);">{{ sev_counts['LOW'] }}</div>
+    <div class="l">low</div>
+  </div>
+  {% endif %}
 </div>
 
 <!-- ===== Crashes over time chart ===== -->
@@ -207,20 +223,19 @@
 {% endif %}
 
 <!-- =============================================================== -->
-<!--  SECTION 1: CWE — Критические уязвимости                       -->
+<!--  SECTION 1: CWE — Уязвимости                                   -->
 <!-- =============================================================== -->
 <h2>
-  <span class="section-label crit">CRITICAL</span>
   Уязвимости (CWE) <span class="count">— {{ cwe_crashes|length }} шт.</span>
 </h2>
 
 {% if cwe_crashes %}
 {% for c in cwe_crashes %}
 {% set top = c.top_cwe %}
-<details class="issue sev-CRITICAL" {% if loop.index <= 5 %}open{% endif %}>
+<details class="issue sev-{{ c.severity_level }}" {% if loop.index <= 5 %}open{% endif %}>
   <summary>
     #{{ loop.index }} &mdash; {{ top }}: {{ cwe_titles.get(top, top) }}
-    <span class="badge CRITICAL">CRITICAL</span>
+    <span class="badge {{ c.severity_level }}">{{ c.severity_level }}</span>
     <span class="exploit-badge {{ c.exploitability }}" title="Оценка эксплуатируемости: насколько уязвимость близка к практической эксплуатации">{{ exploitability_names.get(c.exploitability, c.exploitability) }}</span>
     {% if c.duplicate_count > 1 %}
     <span class="dups">&times;{{ c.duplicate_count }} дубликатов</span>

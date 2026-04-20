@@ -53,6 +53,24 @@ def _extract_top_func(backtrace: list[str]) -> str | None:
     return None
 
 
+def _extract_all_funcs(backtrace: list[str]) -> list[str]:
+    funcs: list[str] = []
+    for frame in backtrace:
+        m = _FUNC_RE.search(frame)
+        if m:
+            funcs.append(m.group(1))
+    return funcs
+
+
+_GLIBC_DOUBLE_FREE_RE = re.compile(r"double free|invalid pointer|free\(\): invalid", re.I)
+_GLIBC_HEAP_CORRUPT_RE = re.compile(
+    r"corrupted size vs\. prev_size|invalid next size|"
+    r"corrupted double-linked list|malloc_consolidate|"
+    r"munmap_chunk\(\): invalid pointer",
+    re.I,
+)
+
+
 def _gdb_heuristics(gdb: GdbResult, signal_class: str) -> dict[str, float]:
     """Derive CWE weights from GDB data when sanitizer output is absent."""
     hints: dict[str, float] = {}
@@ -73,16 +91,25 @@ def _gdb_heuristics(gdb: GdbResult, signal_class: str) -> dict[str, float]:
     if signal_class == "ERROR_FPE":
         hints["CWE-369"] = max(hints.get("CWE-369", 0), 0.7)
 
-    top_func = _extract_top_func(gdb.backtrace)
-    if top_func:
-        if top_func in _ALLOC_FUNCS:
-            hints["CWE-416"] = max(hints.get("CWE-416", 0), 0.5)
-            hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.4)
-        elif top_func in _STRING_FUNCS:
-            hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.6)
-            hints["CWE-125"] = max(hints.get("CWE-125", 0), 0.5)
-        elif top_func in _IO_FUNCS:
-            hints["CWE-134"] = max(hints.get("CWE-134", 0), 0.4)
+    all_funcs = _extract_all_funcs(gdb.backtrace)
+    has_alloc = any(f in _ALLOC_FUNCS for f in all_funcs)
+    has_string = any(f in _STRING_FUNCS for f in all_funcs)
+    has_io = any(f in _IO_FUNCS for f in all_funcs)
+
+    if has_alloc:
+        hints["CWE-416"] = max(hints.get("CWE-416", 0), 0.5)
+        hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.4)
+    if has_string:
+        hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.6)
+        hints["CWE-125"] = max(hints.get("CWE-125", 0), 0.5)
+    if has_io:
+        hints["CWE-134"] = max(hints.get("CWE-134", 0), 0.4)
+
+    raw = gdb.raw
+    if _GLIBC_DOUBLE_FREE_RE.search(raw):
+        hints["CWE-415"] = max(hints.get("CWE-415", 0), 0.85)
+    if _GLIBC_HEAP_CORRUPT_RE.search(raw):
+        hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.7)
 
     if gdb.pc is not None and gdb.pc < 0x1000:
         hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.6)
@@ -160,12 +187,54 @@ def classify_one(
     return crash
 
 
+def _replay_worker(args: tuple[Path, Path, str]) -> GdbResult | None:
+    target, crash_path, target_args = args
+    return replay(target, crash_path, target_args)
+
+
 def classify(
     crashes: list[Crash],
     target: Path | None,
     target_args: str,
     no_replay: bool,
+    jobs: int = 0,
 ) -> list[Crash]:
-    for c in crashes:
-        classify_one(c, target, target_args, no_replay)
+    if no_replay or target is None or jobs == 1 or len(crashes) <= 1:
+        for c in crashes:
+            classify_one(c, target, target_args, no_replay)
+        return crashes
+
+    from concurrent.futures import ProcessPoolExecutor
+    import os
+
+    n_workers = jobs if jobs > 0 else min(os.cpu_count() or 1, len(crashes))
+    work = [(target, c.raw.path, target_args) for c in crashes]
+
+    with ProcessPoolExecutor(max_workers=n_workers) as pool:
+        gdb_results = list(pool.map(_replay_worker, work))
+
+    for crash, gdb_res in zip(crashes, gdb_results, strict=True):
+        dist = dict(signal_to_cwe_prior(crash.raw.signal))
+        signal_class = signal_to_class(crash.raw.signal)
+        sanitizer_region: str | None = None
+
+        if gdb_res is not None:
+            san_dist, sanitizer_region = parse_sanitizer_output(gdb_res.raw)
+            has_sanitizer = bool(san_dist)
+            for k, v in san_dist.items():
+                dist[k] = max(dist.get(k, 0.0), v)
+            if not has_sanitizer:
+                gdb_hints = _gdb_heuristics(gdb_res, signal_class)
+                for k, v in gdb_hints.items():
+                    dist[k] = max(dist.get(k, 0.0), v)
+            crash.backtrace = gdb_res.backtrace
+            crash.faulting_instruction = gdb_res.faulting_instruction
+            crash.faulting_address = gdb_res.faulting_address
+            crash.evidence = gdb_res.raw[-2000:]
+            crash.gdb_output = gdb_res.raw
+
+        crash.cwe_distribution = normalize_distribution(dist)
+        crash.taxonomy = build_taxonomy(signal_class, gdb_res, sanitizer_region)
+        crash.exploitability = assess(crash.taxonomy, gdb_res, crash.top_cwe)
+
     return crashes

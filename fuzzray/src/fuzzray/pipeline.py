@@ -32,7 +32,7 @@ def run_pipeline(
     crashes = deduplicate(raw_crashes)
     console.print(f"  дедупликация → [bold]{len(crashes)}[/] уникальных входов")
 
-    classify(crashes, target=target, target_args=target_args, no_replay=no_replay)
+    classify(crashes, target=target, target_args=target_args, no_replay=no_replay, jobs=jobs)
     console.print("  классификация (CWE + таксономия + эксплуатируемость)")
 
     crashes = deduplicate_by_stack(crashes)

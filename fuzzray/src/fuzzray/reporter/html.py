@@ -123,6 +123,8 @@ def render_html(report: Report) -> str:
 
     crashes_chart = render_crashes_over_time(report.plot_points)
 
+    sev_counts = Counter(c.severity_level for c in report.crashes)
+
     return tpl.render(
         report=report,
         cwe_crashes=cwe_crashes,
@@ -134,4 +136,5 @@ def render_html(report: Report) -> str:
         by_region=by_region.most_common(),
         by_exploit=by_exploit.most_common(),
         crashes_chart=crashes_chart,
+        sev_counts=sev_counts,
     )
