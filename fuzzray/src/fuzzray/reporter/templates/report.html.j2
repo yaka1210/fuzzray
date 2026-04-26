@@ -258,7 +258,7 @@
     <span class="badge {{ c.severity_level }}">{{ c.severity_level }}</span>
     <span class="exploit-badge {{ c.exploitability }}" title="Оценка эксплуатируемости: насколько уязвимость близка к практической эксплуатации">{{ exploitability_names.get(c.exploitability, c.exploitability) }}</span>
     {% if c.duplicate_count > 1 %}
-    <span class="dups">&times;{{ c.duplicate_count }} дубликатов</span>
+    <span class="dups">&times;{{ c.duplicate_count }} триггеров</span>
     {% endif %}
   </summary>
   <div class="body">
@@ -266,6 +266,17 @@
     <dl class="info-grid">
       <dt>Входной файл</dt>
       <dd><code class="ic">{{ c.raw.path.name }}</code> ({{ c.raw.size }} байт)</dd>
+      {% if c.duplicate_count > 1 %}
+      <dt>Все триггеры</dt>
+      <dd>{{ c.duplicate_count }} файлов вызывают этот же дефект:
+        <details><summary style="cursor:pointer; color: var(--accent); font-size: 0.82rem;">показать список</summary>
+        <ul style="margin: 6px 0 0 18px; font-size: 0.8rem; color: var(--text2); max-height: 200px; overflow-y: auto;">
+          {% for p in c.duplicate_paths %}
+          <li><code class="ic">{{ p.name }}</code></li>
+          {% endfor %}
+        </ul></details>
+      </dd>
+      {% endif %}
       {% if c.stack_hash %}
       <dt>Хеш стека</dt>
       <dd><code class="ic">{{ c.stack_hash }}</code></dd>

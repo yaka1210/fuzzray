@@ -8,7 +8,7 @@ from rich.console import Console
 from fuzzray.classifier.engine import classify
 from fuzzray.classifier.minimizer import hex_dump, minimize
 from fuzzray.collector import collect
-from fuzzray.deduplicator import deduplicate, deduplicate_by_stack
+from fuzzray.deduplicator import deduplicate, deduplicate_by_location, deduplicate_by_stack
 from fuzzray.models import Report
 from fuzzray.prioritizer import prioritize
 from fuzzray.reporter.html import render_html
@@ -41,6 +41,9 @@ def run_pipeline(
 
     crashes = deduplicate_by_stack(crashes)
     console.print(f"  дедупликация по стеку → [bold]{len(crashes)}[/] уязвимостей")
+
+    crashes = deduplicate_by_location(crashes)
+    console.print(f"  дедупликация по точке сбоя → [bold]{len(crashes)}[/] дефектов кода")
 
     prioritize(crashes)
     crit = sum(1 for c in crashes if c.severity_level == "CRITICAL")

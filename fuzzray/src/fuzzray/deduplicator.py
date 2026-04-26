@@ -78,3 +78,25 @@ def deduplicate_by_stack(crashes: list[Crash]) -> list[Crash]:
             existing.duplicate_count += c.duplicate_count
             existing.duplicate_paths.extend(c.duplicate_paths)
     return [*by_stack.values(), *untouched]
+
+
+def deduplicate_by_location(crashes: list[Crash]) -> list[Crash]:
+    """Level C dedup: collapse crashes pointing to the same code location.
+
+    Key = (crash_location, faulting_instruction, top_cwe). Crashes without
+    a resolved location keep their Level B identity.
+    """
+    by_loc: dict[tuple[str, str, str], Crash] = {}
+    untouched: list[Crash] = []
+    for c in crashes:
+        if not c.crash_location:
+            untouched.append(c)
+            continue
+        key = (c.crash_location, c.faulting_instruction or "", c.top_cwe)
+        existing = by_loc.get(key)
+        if existing is None:
+            by_loc[key] = c
+        else:
+            existing.duplicate_count += c.duplicate_count
+            existing.duplicate_paths.extend(c.duplicate_paths)
+    return [*by_loc.values(), *untouched]
