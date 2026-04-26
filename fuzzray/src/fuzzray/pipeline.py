@@ -6,11 +6,13 @@ from pathlib import Path
 from rich.console import Console
 
 from fuzzray.classifier.engine import classify
+from fuzzray.classifier.minimizer import hex_dump, minimize
 from fuzzray.collector import collect
 from fuzzray.deduplicator import deduplicate, deduplicate_by_stack
 from fuzzray.models import Report
 from fuzzray.prioritizer import prioritize
 from fuzzray.reporter.html import render_html
+from fuzzray.reporter.reproducer import render as render_reproducer
 
 console = Console()
 
@@ -23,6 +25,8 @@ def run_pipeline(
     target_args: str,
     no_replay: bool,
     jobs: int,
+    do_minimize: bool = False,
+    write_reproducers: bool = True,
 ) -> None:
     console.print(f"[bold cyan]FuzzRay[/] сканирование [yellow]{afl_out}[/]")
 
@@ -53,6 +57,31 @@ def run_pipeline(
     if low:
         parts.append(f"[dim]{low} LOW[/]")
     console.print(f"  приоритизация: {', '.join(parts)}")
+
+    if do_minimize and target is not None:
+        min_dir = output.parent / f"{output.stem}_minimized"
+        ok = 0
+        for c in crashes:
+            res = minimize(target, c.raw.path, target_args, min_dir)
+            if res is not None:
+                c.minimized_size = res.minimized_size
+                try:
+                    c.minimized_hex = hex_dump(res.minimized_path.read_bytes())
+                except OSError:
+                    pass
+                ok += 1
+        console.print(f"  минимизация (afl-tmin): [bold]{ok}[/] / {len(crashes)} → {min_dir}")
+
+    if write_reproducers:
+        repro_dir = output.parent / f"{output.stem}_reproducers"
+        repro_dir.mkdir(parents=True, exist_ok=True)
+        for i, c in enumerate(crashes, 1):
+            script = render_reproducer(c, i, target, target_args)
+            c.reproducer_script = script
+            sh = repro_dir / f"reproduce_{i:03d}_{c.top_cwe.replace('-', '_')}.sh"
+            sh.write_text(script, encoding="utf-8")
+            sh.chmod(0o755)
+        console.print(f"  репродьюсеры: [bold]{len(crashes)}[/] скриптов → {repro_dir}")
 
     report = Report(
         target=str(target) if target else "(не указана)",

@@ -11,7 +11,8 @@ from fuzzray.classifier.cwe_rules import (
 from fuzzray.classifier.exploitability import assess
 from fuzzray.classifier.gdb_runner import GdbResult, replay
 from fuzzray.classifier.sanitizer import parse_sanitizer_output
-from fuzzray.classifier.symbolizer import symbolize, symbolize_backtrace
+from fuzzray.classifier.source_snippet import extract_snippet
+from fuzzray.classifier.symbolizer import first_user_frame, symbolize, symbolize_backtrace
 from fuzzray.classifier.taxonomy import build_taxonomy
 from fuzzray.models import Crash
 
@@ -189,6 +190,17 @@ def classify_one(
                 crash.crash_function = func
                 crash.crash_location = loc
 
+            if not crash.crash_location or not crash.crash_function:
+                ufunc, uloc = first_user_frame(crash.backtrace)
+                crash.crash_function = crash.crash_function or ufunc
+                crash.crash_location = crash.crash_location or uloc
+
+            snippet = extract_snippet(crash.crash_location, target.parent if target else None)
+            if snippet:
+                crash.source_snippet = snippet.lines
+                crash.source_snippet_file = snippet.file
+                crash.source_snippet_crash_line = snippet.crash_line
+
     crash.cwe_distribution = normalize_distribution(dist)
     crash.taxonomy = build_taxonomy(signal_class, gdb, sanitizer_region)
     crash.exploitability = assess(crash.taxonomy, gdb, crash.top_cwe)
@@ -245,6 +257,17 @@ def classify(
                 func, loc = symbolize(target, gdb_res.pc)
                 crash.crash_function = func
                 crash.crash_location = loc
+
+            if not crash.crash_location or not crash.crash_function:
+                ufunc, uloc = first_user_frame(crash.backtrace)
+                crash.crash_function = crash.crash_function or ufunc
+                crash.crash_location = crash.crash_location or uloc
+
+            snippet = extract_snippet(crash.crash_location, target.parent if target else None)
+            if snippet:
+                crash.source_snippet = snippet.lines
+                crash.source_snippet_file = snippet.file
+                crash.source_snippet_crash_line = snippet.crash_line
 
         crash.cwe_distribution = normalize_distribution(dist)
         crash.taxonomy = build_taxonomy(signal_class, gdb_res, sanitizer_region)

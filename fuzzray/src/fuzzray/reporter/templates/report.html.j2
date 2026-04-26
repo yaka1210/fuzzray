@@ -129,6 +129,26 @@
     max-height: 400px; overflow-y: auto;
     font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
   }
+
+  .snippet {
+    background: #080d1a; border: 1px solid rgba(0,221,235,0.15);
+    border-radius: 8px; margin: 8px 0; padding: 10px 0;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 0.8rem;
+    overflow-x: auto;
+  }
+  .snippet .src-file { color: var(--text2); padding: 0 16px 6px;
+                       border-bottom: 1px solid rgba(100,100,255,0.12);
+                       margin-bottom: 6px; font-size: 0.78rem; }
+  .snippet .ln { display: inline-block; width: 48px; padding: 0 12px;
+                 color: var(--text2); text-align: right; user-select: none; }
+  .snippet .row { padding: 1px 0; white-space: pre; }
+  .snippet .row.hit { background: rgba(255, 71, 87, 0.18);
+                       border-left: 3px solid var(--crit); }
+  .snippet .row.hit .ln { color: var(--crit); font-weight: 700; }
+  .snippet .code { color: #a0d6ff; }
+
+  .min-info { font-size: 0.85rem; color: var(--text2); margin: 6px 0; }
+  .min-info .saving { color: var(--low); font-weight: 600; }
   code { font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace; font-size: 0.85em; }
   .ic { color: var(--accent); background: rgba(0,221,235,0.1);
         padding: 1px 5px; border-radius: 3px; }
@@ -284,6 +304,31 @@
     {% if c.faulting_instruction %}
     <h3>Инструкция сбоя</h3>
     <pre>{{ c.faulting_instruction }}{% if c.faulting_address is not none %}  @ 0x{{ '%x' % c.faulting_address }}{% endif %}</pre>
+    {% endif %}
+
+    {% if c.source_snippet %}
+    <h3>Исходный код в точке сбоя</h3>
+    <div class="snippet">
+      <div class="src-file">{{ c.source_snippet_file }}</div>
+      {% for ln, src in c.source_snippet %}
+      <div class="row{% if ln == c.source_snippet_crash_line %} hit{% endif %}"><span class="ln">{{ ln }}</span><span class="code">{{ src }}</span></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if c.minimized_size is not none %}
+    <h3>Минимизированный вход (afl-tmin)</h3>
+    <p class="min-info">{{ c.raw.size }} байт → <span class="saving">{{ c.minimized_size }} байт</span> (сжатие в {{ '%.1f' % (c.raw.size / c.minimized_size if c.minimized_size > 0 else 1) }}×)</p>
+    {% if c.minimized_hex %}
+    <pre>{{ c.minimized_hex }}</pre>
+    {% endif %}
+    {% endif %}
+
+    {% if c.reproducer_script %}
+    <details>
+      <summary style="cursor:pointer; color: var(--text2); font-size: 0.85rem; margin: 8px 0;">Скрипт-репродьюсер (bash)</summary>
+      <pre style="max-height: 400px;">{{ c.reproducer_script }}</pre>
+    </details>
     {% endif %}
 
     {% if c.gdb_output %}

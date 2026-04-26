@@ -18,6 +18,8 @@ def main(
     target_args: Annotated[str, typer.Option("--target-args", help="Шаблон аргументов цели, @@ = путь к входу")] = "@@",
     no_replay: Annotated[bool, typer.Option("--no-replay", help="Без gdb-воспроизведения, только статическая классификация")] = False,
     jobs: Annotated[int, typer.Option("-j", "--jobs", help="Число параллельных gdb-воспроизведений")] = 0,
+    minimize: Annotated[bool, typer.Option("--minimize", help="Минимизировать crash-входы через afl-tmin (требует afl-tmin в PATH)")] = False,
+    no_reproducers: Annotated[bool, typer.Option("--no-reproducers", help="Не генерировать bash-скрипты репродьюсеров")] = False,
 ) -> None:
     """Генерация HTML-отчёта FuzzRay по выходному каталогу AFL++."""
     from fuzzray.pipeline import run_pipeline
@@ -29,6 +31,8 @@ def main(
         target_args=target_args,
         no_replay=no_replay,
         jobs=jobs,
+        do_minimize=minimize,
+        write_reproducers=not no_reproducers,
     )
 
 

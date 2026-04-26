@@ -46,6 +46,14 @@ class Crash(BaseModel):
     crash_function: str | None = None
     crash_location: str | None = None
 
+    source_snippet: list[tuple[int, str]] = Field(default_factory=list)
+    source_snippet_file: str | None = None
+    source_snippet_crash_line: int | None = None
+
+    minimized_size: int | None = None
+    minimized_hex: str | None = None
+    reproducer_script: str | None = None
+
     @property
     def top_cwe(self) -> str:
         if not self.cwe_distribution:
