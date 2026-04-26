@@ -46,6 +46,8 @@ def build_dynamic_recommendation(
     crash_site: str,
     backtrace: list[str],
     faulting_instruction: str | None,
+    crash_function: str | None = None,
+    crash_location: str | None = None,
 ) -> str:
     parts: list[str] = []
 
@@ -54,16 +56,22 @@ def build_dynamic_recommendation(
     elif signal_class in ERROR_RECOMMENDATIONS:
         parts.append(ERROR_RECOMMENDATIONS[signal_class])
 
-    if backtrace:
-        top_frame = backtrace[0]
-        func_name = _extract_function(top_frame)
-        file_loc = _extract_location(top_frame)
-        if func_name and file_loc:
-            parts.append(f"Сбой произошёл в функции {func_name} ({file_loc}).")
-        elif func_name:
-            parts.append(f"Сбой произошёл в функции {func_name}.")
-        elif file_loc:
-            parts.append(f"Сбой произошёл в {file_loc}.")
+    func_name = crash_function
+    file_loc = crash_location
+    if (not func_name or not file_loc) and backtrace:
+        for frame in backtrace:
+            if _is_noise(frame):
+                continue
+            func_name = func_name or _extract_function(frame)
+            file_loc = file_loc or _extract_location(frame)
+            if func_name and func_name != "optimized out":
+                break
+    if func_name and file_loc:
+        parts.append(f"Сбой произошёл в функции {func_name} ({file_loc}).")
+    elif func_name:
+        parts.append(f"Сбой произошёл в функции {func_name}.")
+    elif file_loc:
+        parts.append(f"Сбой произошёл в {file_loc}.")
 
     site_hints = {
         "libc_alloc": "Краш в аллокаторе (malloc/free) — вероятно повреждение heap-метаданных выше по стеку. Ищите ошибку в вызывающем коде.",
@@ -84,10 +92,27 @@ def build_dynamic_recommendation(
     return " ".join(parts) if parts else "Соберите цель с -fsanitize=address,undefined для точной классификации."
 
 
+_NOISE_FRAME_RE = None
+
+
+def _is_noise(frame: str) -> bool:
+    global _NOISE_FRAME_RE
+    if _NOISE_FRAME_RE is None:
+        import re
+        _NOISE_FRAME_RE = re.compile(
+            r"__pthread_kill|__GI_raise|__GI_abort|"
+            r"__asan_|__sanitizer_|__interceptor_|"
+            r"__ubsan_|__msan_|__lsan_|"
+            r"/nptl/|/sysdeps/|/glibc-|"
+            r"__libc_start|_start$"
+        )
+    return bool(_NOISE_FRAME_RE.search(frame))
+
+
 def _extract_function(frame: str) -> str | None:
     import re
     m = re.search(r"\bin\s+(\w+)\s*\(", frame)
-    if m:
+    if m and m.group(1) not in ("optimized", "out"):
         return m.group(1)
     m = re.search(r"<([^+>]+)", frame)
     if m:

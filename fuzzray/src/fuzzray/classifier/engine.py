@@ -11,6 +11,7 @@ from fuzzray.classifier.cwe_rules import (
 from fuzzray.classifier.exploitability import assess
 from fuzzray.classifier.gdb_runner import GdbResult, replay
 from fuzzray.classifier.sanitizer import parse_sanitizer_output
+from fuzzray.classifier.symbolizer import symbolize, symbolize_backtrace
 from fuzzray.classifier.taxonomy import build_taxonomy
 from fuzzray.models import Crash
 
@@ -177,11 +178,16 @@ def classify_one(
                 for k, v in gdb_hints.items():
                     dist[k] = max(dist.get(k, 0.0), v)
 
-            crash.backtrace = gdb.backtrace
+            crash.backtrace = symbolize_backtrace(target, gdb.backtrace) if target else gdb.backtrace
             crash.faulting_instruction = gdb.faulting_instruction
             crash.faulting_address = gdb.faulting_address
             crash.evidence = gdb.raw[-2000:]
             crash.gdb_output = gdb.raw
+
+            if target and gdb.pc is not None:
+                func, loc = symbolize(target, gdb.pc)
+                crash.crash_function = func
+                crash.crash_location = loc
 
     crash.cwe_distribution = normalize_distribution(dist)
     crash.taxonomy = build_taxonomy(signal_class, gdb, sanitizer_region)
@@ -229,11 +235,16 @@ def classify(
                 gdb_hints = _gdb_heuristics(gdb_res, signal_class)
                 for k, v in gdb_hints.items():
                     dist[k] = max(dist.get(k, 0.0), v)
-            crash.backtrace = gdb_res.backtrace
+            crash.backtrace = symbolize_backtrace(target, gdb_res.backtrace) if target else gdb_res.backtrace
             crash.faulting_instruction = gdb_res.faulting_instruction
             crash.faulting_address = gdb_res.faulting_address
             crash.evidence = gdb_res.raw[-2000:]
             crash.gdb_output = gdb_res.raw
+
+            if target and gdb_res.pc is not None:
+                func, loc = symbolize(target, gdb_res.pc)
+                crash.crash_function = func
+                crash.crash_location = loc
 
         crash.cwe_distribution = normalize_distribution(dist)
         crash.taxonomy = build_taxonomy(signal_class, gdb_res, sanitizer_region)

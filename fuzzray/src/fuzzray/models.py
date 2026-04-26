@@ -43,6 +43,9 @@ class Crash(BaseModel):
     faulting_address: int | None = None
     gdb_output: str = ""
 
+    crash_function: str | None = None
+    crash_location: str | None = None
+
     @property
     def top_cwe(self) -> str:
         if not self.cwe_distribution:

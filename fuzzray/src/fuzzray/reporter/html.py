@@ -89,6 +89,8 @@ def _build_recommendation(c: Crash) -> str:
         crash_site=c.taxonomy.crash_site_kind,
         backtrace=c.backtrace,
         faulting_instruction=c.faulting_instruction,
+        crash_function=c.crash_function,
+        crash_location=c.crash_location,
     )
 
 
