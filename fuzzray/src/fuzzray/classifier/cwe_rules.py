@@ -48,10 +48,16 @@ def build_dynamic_recommendation(
     faulting_instruction: str | None,
     crash_function: str | None = None,
     crash_location: str | None = None,
+    source_snippet: list[tuple[int, str]] | None = None,
+    source_snippet_crash_line: int | None = None,
 ) -> str:
     parts: list[str] = []
 
-    if top_cwe != "unknown" and top_cwe in CWE_RECOMMENDATIONS:
+    from fuzzray.classifier.recommender import analyze_snippet
+    code_aware = analyze_snippet(top_cwe, source_snippet or [], source_snippet_crash_line)
+    if code_aware:
+        parts.append(code_aware)
+    elif top_cwe != "unknown" and top_cwe in CWE_RECOMMENDATIONS:
         parts.append(CWE_RECOMMENDATIONS[top_cwe])
     elif signal_class in ERROR_RECOMMENDATIONS:
         parts.append(ERROR_RECOMMENDATIONS[signal_class])

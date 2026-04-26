@@ -91,6 +91,8 @@ def _build_recommendation(c: Crash) -> str:
         faulting_instruction=c.faulting_instruction,
         crash_function=c.crash_function,
         crash_location=c.crash_location,
+        source_snippet=c.source_snippet,
+        source_snippet_crash_line=c.source_snippet_crash_line,
     )
 
 
