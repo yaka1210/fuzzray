@@ -300,7 +300,7 @@
     </div>
 
     <div class="rec">
-      <b>Рекомендация по исправлению:</b> {{ cwe_recs[loop.index0] }}
+      <b>Локализация:</b> {{ cwe_recs[loop.index0] }}
       {% if top.startswith('CWE-') %}
       <br><a href="https://cwe.mitre.org/data/definitions/{{ top.split('-')[1] }}.html" target="_blank">Подробнее: MITRE {{ top }} &rarr;</a>
       {% endif %}
@@ -407,7 +407,7 @@
     </div>
 
     <div class="rec">
-      <b>Рекомендация по исправлению:</b> {{ error_recs[loop.index0] }}
+      <b>Локализация:</b> {{ error_recs[loop.index0] }}
     </div>
 
     {% if c.backtrace %}

@@ -51,17 +51,6 @@ def build_dynamic_recommendation(
     source_snippet: list[tuple[int, str]] | None = None,
     source_snippet_crash_line: int | None = None,
 ) -> str:
-    parts: list[str] = []
-
-    from fuzzray.classifier.recommender import analyze_snippet
-    code_aware = analyze_snippet(top_cwe, source_snippet or [], source_snippet_crash_line)
-    if code_aware:
-        parts.append(code_aware)
-    elif top_cwe != "unknown" and top_cwe in CWE_RECOMMENDATIONS:
-        parts.append(CWE_RECOMMENDATIONS[top_cwe])
-    elif signal_class in ERROR_RECOMMENDATIONS:
-        parts.append(ERROR_RECOMMENDATIONS[signal_class])
-
     func_name = crash_function
     file_loc = crash_location
     if (not func_name or not file_loc) and backtrace:
@@ -73,29 +62,14 @@ def build_dynamic_recommendation(
             if func_name and func_name != "optimized out":
                 break
     if func_name and file_loc:
-        parts.append(f"Сбой произошёл в функции {func_name} ({file_loc}).")
-    elif func_name:
-        parts.append(f"Сбой произошёл в функции {func_name}.")
-    elif file_loc:
-        parts.append(f"Сбой произошёл в {file_loc}.")
-
-    site_hints = {
-        "libc_alloc": "Краш в аллокаторе (malloc/free) — вероятно повреждение heap-метаданных выше по стеку. Ищите ошибку в вызывающем коде.",
-        "libc_string": "Краш в строковой функции (memcpy/strcpy) — вероятно передан буфер недостаточного размера. Проверьте аргументы вызова.",
-        "libc_io": "Краш в функции ввода-вывода — возможна проблема с форматной строкой или невалидным буфером.",
-    }
-    if crash_site in site_hints:
-        parts.append(site_hints[crash_site])
-
-    if faulting_instruction:
-        if "div" in faulting_instruction.lower() or "idiv" in faulting_instruction.lower():
-            parts.append("Инструкция деления — убедитесь, что делитель проверяется на ноль.")
-        elif "call" in faulting_instruction.lower() or "jmp" in faulting_instruction.lower():
-            parts.append("Инструкция перехода — возможно повреждение указателя на функцию или vtable.")
-        elif "mov" in faulting_instruction.lower():
-            parts.append("Инструкция обращения к памяти — проверьте валидность адреса назначения.")
-
-    return " ".join(parts) if parts else "Соберите цель с -fsanitize=address,undefined для точной классификации."
+        return f"Сбой произошёл в функции {func_name} ({file_loc})."
+    if func_name:
+        return f"Сбой произошёл в функции {func_name}."
+    if file_loc:
+        return f"Сбой произошёл в {file_loc}."
+    if signal_class in ERROR_RECOMMENDATIONS:
+        return ERROR_RECOMMENDATIONS[signal_class]
+    return "Локализация сбоя не определена. Соберите цель с отладочной информацией (-g) и повторите анализ."
 
 
 _NOISE_FRAME_RE = None
