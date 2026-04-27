@@ -387,6 +387,26 @@
 {% endif %}
 
 <!-- ===== Error type reference ===== -->
+<!-- ===== CWE reference ===== -->
+<h2>Справочник классов уязвимостей (CWE)</h2>
+<p style="font-size: 0.85rem; color: var(--text2); margin-bottom: 12px;">
+  Классы уязвимостей, которые распознаёт инструмент, с краткими пояснениями простыми словами и уровнем критичности по умолчанию.
+</p>
+<table>
+  <tr><th>CWE</th><th>Название</th><th>Описание</th><th>Уровень</th></tr>
+  <tr><td><code>CWE-787</code></td><td>Запись за пределами буфера</td><td>Программа пишет данные туда, где их быть не должно</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
+  <tr><td><code>CWE-416</code></td><td>Использование освобождённой памяти</td><td>Программа обращается к памяти после <code>free()</code></td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
+  <tr><td><code>CWE-415</code></td><td>Двойное освобождение памяти</td><td>Один и тот же <code>free()</code> вызван дважды</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td><code>CWE-125</code></td><td>Чтение за пределами буфера</td><td>Программа читает данные из «чужой» памяти</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td><code>CWE-119</code></td><td>Некорректная работа с буфером</td><td>Общий случай выхода за границы без точного типа</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td><code>CWE-134</code></td><td>Уязвимость форматной строки</td><td>Пользовательские данные попадают в <code>printf</code> как формат</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td><code>CWE-476</code></td><td>Разыменование NULL</td><td>Обращение к памяти по нулевому указателю</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+  <tr><td><code>CWE-190</code></td><td>Целочисленное переполнение</td><td>Арифметическая операция выходит за пределы типа</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+  <tr><td><code>CWE-681</code></td><td>Некорректное преобразование типа</td><td>Значение теряется или искажается при приведении типа</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+  <tr><td><code>CWE-369</code></td><td>Деление на ноль</td><td>Делитель оказался равным нулю</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+  <tr><td><code>CWE-457</code></td><td>Неинициализированная переменная</td><td>Чтение памяти, в которую ещё не записывали</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+</table>
+
 <h2>Справочник типов ошибок</h2>
 <table>
   <tr><th>Категория</th><th>Код ошибки</th><th>Описание</th><th>Уровень</th></tr>
