@@ -38,10 +38,10 @@ def minimize(
 
     cmd = [
         "afl-tmin",
-        "-i", str(crash_file),
+        "-i", str(crash_file.resolve()),
         "-o", str(out_path),
         "--",
-        str(target),
+        str(target.resolve()),
     ]
     if "@@" in target_args:
         for arg in target_args.split():
