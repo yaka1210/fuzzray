@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuzzRay — ol/dvcpl</title>
+<style>
+  :root {
+    --bg: #0f0c29; --bg2: rgba(20, 18, 55, 0.95); --bg3: rgba(30, 28, 70, 0.85);
+    --bg4: rgba(40, 38, 90, 0.7);
+    --text: #e0e1dd; --text2: #8899bb; --accent: #00ddeb; --accent2: #ff6ec7;
+    --crit: #ff4757; --high: #ffa502; --med: #f1c40f; --low: #2ecc71;
+    --border: rgba(100, 100, 255, 0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    color: var(--text); min-height: 100vh; padding: 30px 20px;
+  }
+  .container {
+    max-width: 1200px; margin: 0 auto;
+    background: var(--bg2); border-radius: 24px;
+    border: 1px solid var(--border); padding: 36px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  }
+  header { text-align: center; margin-bottom: 32px; padding-bottom: 24px;
+           border-bottom: 1px solid var(--border); }
+  header h1 {
+    font-size: 3rem; font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header .subtitle { color: var(--text2); font-size: 0.95rem; margin-top: 8px; }
+  header .subtitle code { color: var(--accent); background: rgba(0,221,235,0.1);
+                           padding: 2px 6px; border-radius: 4px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 36px; }
+  .stat-box {
+    background: var(--bg3); border-radius: 16px; padding: 20px; text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-box .n { font-size: 2.4rem; font-weight: 800; line-height: 1.1; }
+  .stat-box .l { color: var(--text2); font-size: 0.8rem; text-transform: uppercase;
+                  letter-spacing: 0.06em; margin-top: 4px; }
+  .stat-box.crit .n { color: var(--crit); }
+  .stat-box.high .n { color: var(--high); }
+  .stat-box.accent .n { color: var(--accent); }
+
+  h2 { font-size: 1.4rem; margin: 32px 0 16px; padding-bottom: 8px;
+       border-bottom: 1px solid var(--border); color: #fff; }
+  h2 .count { color: var(--text2); font-weight: 400; font-size: 1rem; }
+  h3 { font-size: 1rem; color: var(--accent); margin: 12px 0 6px; }
+
+  .section-label {
+    display: inline-block; padding: 4px 14px; border-radius: 8px;
+    font-size: 0.8rem; font-weight: 700; margin-bottom: 12px; color: #fff;
+  }
+  .section-label.crit { background: var(--crit); }
+  .section-label.errors { background: var(--high); }
+
+  .issue {
+    background: var(--bg3); border-left: 6px solid #555; border-radius: 12px;
+    margin-bottom: 12px; overflow: hidden;
+    border: 1px solid var(--border); border-left-width: 6px;
+  }
+  .issue.sev-CRITICAL { border-left-color: var(--crit); }
+  .issue.sev-HIGH     { border-left-color: var(--high); }
+  .issue.sev-MEDIUM   { border-left-color: var(--med); }
+  .issue.sev-LOW      { border-left-color: var(--low); }
+  .issue summary {
+    cursor: pointer; padding: 14px 18px; font-weight: 600; font-size: 0.95rem;
+    list-style: none; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    color: #fff;
+  }
+  .issue summary::-webkit-details-marker { display: none; }
+  .issue summary::before { content: '\25B6'; font-size: 0.7rem; color: var(--text2);
+                            transition: transform 0.2s; }
+  .issue[open] summary::before { transform: rotate(90deg); }
+  .issue .body { padding: 0 18px 18px; }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px;
+           font-size: 0.72rem; font-weight: 700; color: #fff; }
+  .badge.CRITICAL { background: var(--crit); }
+  .badge.HIGH     { background: var(--high); color: #1a1a2e; }
+  .badge.MEDIUM   { background: var(--med); color: #1a1a2e; }
+  .badge.LOW      { background: var(--low); color: #1a1a2e; }
+
+  .exploit-badge { display: inline-block; padding: 2px 10px; border-radius: 12px;
+                   font-size: 0.72rem; font-weight: 700; }
+  .exploit-badge.EXPLOITABLE { background: var(--crit); color: #fff; }
+  .exploit-badge.PROBABLY_EXPLOITABLE { background: #e17055; color: #fff; }
+  .exploit-badge.PROBABLY_NOT_EXPLOITABLE { background: #636e72; color: #dfe6e9; }
+  .exploit-badge.UNKNOWN { background: #2d3436; color: #b2bec3; border: 1px solid #636e72; }
+
+  .dups { color: var(--text2); font-size: 0.8rem; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 6px;
+         background: rgba(0,221,235,0.1); color: var(--accent); font-size: 0.78rem;
+         border: 1px solid rgba(0,221,235,0.2); }
+
+  .info-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px;
+               font-size: 0.85rem; margin: 10px 0; }
+  .info-grid dt { color: var(--text2); white-space: nowrap; }
+  .info-grid dd { color: #fff; margin: 0; }
+
+  .rec {
+    background: rgba(46, 204, 113, 0.08); border-left: 4px solid var(--low);
+    padding: 12px 16px; margin: 12px 0; border-radius: 8px; font-size: 0.88rem;
+    line-height: 1.6;
+  }
+  .rec b { color: var(--low); }
+  .rec a { color: var(--accent); text-decoration: none; }
+  .rec a:hover { text-decoration: underline; }
+
+  .error-desc {
+    background: rgba(255, 165, 2, 0.08); border-left: 4px solid var(--high);
+    padding: 12px 16px; margin: 12px 0; border-radius: 8px; font-size: 0.88rem;
+    line-height: 1.5;
+  }
+  .error-desc b { color: var(--high); }
+
+  pre {
+    background: #080d1a; color: #a0d6ff; padding: 14px 16px; border-radius: 8px;
+    overflow-x: auto; font-size: 0.78rem; line-height: 1.4; white-space: pre;
+    border: 1px solid rgba(0,221,235,0.15); margin: 8px 0;
+    max-height: 400px; overflow-y: auto;
+    font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  }
+  code { font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace; font-size: 0.85em; }
+  .ic { color: var(--accent); background: rgba(0,221,235,0.1);
+        padding: 1px 5px; border-radius: 3px; }
+
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+  th, td { padding: 8px 12px; text-align: left; font-size: 0.85rem;
+           border-bottom: 1px solid rgba(100,100,255,0.12); }
+  th { background: rgba(30,28,70,0.6); color: var(--accent); font-weight: 600; }
+  td { color: var(--text); }
+
+  .group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 24px; }
+  .group-box { background: var(--bg3); border-radius: 12px; padding: 16px;
+               border: 1px solid var(--border); }
+  .group-box h4 { font-size: 0.9rem; color: var(--text2); margin: 0 0 8px; }
+
+  .gost-box {
+    background: rgba(0, 221, 235, 0.05); border: 1px solid rgba(0, 221, 235, 0.2);
+    border-radius: 12px; padding: 20px; margin: 16px 0;
+  }
+  .gost-box h4 { color: var(--accent); margin: 0 0 10px; font-size: 0.95rem; }
+  .gost-box ul { padding-left: 20px; margin: 8px 0; }
+  .gost-box li { margin: 4px 0; font-size: 0.85rem; line-height: 1.5; }
+  .gost-check { color: var(--low); font-weight: 700; }
+  .gost-ref { color: var(--text2); font-size: 0.8rem; }
+
+  .empty { color: var(--text2); font-style: italic; text-align: center; padding: 30px; }
+
+  footer { text-align: center; margin-top: 36px; padding-top: 16px;
+           border-top: 1px solid var(--border); color: var(--text2); font-size: 0.8rem; }
+
+  @media (max-width: 700px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .group-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>FuzzRay</h1>
+  <div class="subtitle">
+    Анализ результатов AFL++ &bull;
+    цель: <code>ol/dvcpl</code> &bull;
+    17.04.2026 14:01
+  </div>
+</header>
+
+<!-- ===== Summary ===== -->
+<div class="stats">
+  <div class="stat-box accent">
+    <div class="n">2</div>
+    <div class="l">всего крашей</div>
+  </div>
+  <div class="stat-box accent">
+    <div class="n">1</div>
+    <div class="l">уникальных</div>
+  </div>
+  <div class="stat-box crit">
+    <div class="n">0</div>
+    <div class="l">уязвимостей (CWE)</div>
+  </div>
+  <div class="stat-box high">
+    <div class="n">1</div>
+    <div class="l">ошибок выполнения</div>
+  </div>
+</div>
+
+<!-- =============================================================== -->
+<!--  SECTION 1: CWE — Критические уязвимости                       -->
+<!-- =============================================================== -->
+<h2>
+  <span class="section-label crit">CRITICAL</span>
+  Уязвимости (CWE) <span class="count">— 0 шт.</span>
+</h2>
+
+<p class="empty">CWE-уязвимостей не обнаружено. Для точной классификации соберите цель с -fsanitize=address,undefined</p>
+
+<!-- =============================================================== -->
+<!--  SECTION 2: ERROR_* — Ошибки выполнения                        -->
+<!-- =============================================================== -->
+<h2>
+  <span class="section-label errors">ОШИБКИ</span>
+  Ошибки выполнения <span class="count">— 1 шт.</span>
+</h2>
+
+<details class="issue sev-HIGH" open>
+  <summary>
+    #1 &mdash; ERROR_SEGFAULT
+    <span class="badge HIGH">HIGH</span>
+    <span class="exploit-badge PROBABLY_NOT_EXPLOITABLE">Вероятно не эксплуатируемая</span>
+    <span class="dups">&times;2 дубликатов</span>
+  </summary>
+  <div class="body">
+
+    <div class="error-desc">
+      <b>Память:</b>
+      Общее нарушение доступа к памяти: чтение или запись по недопустимому адресу
+    </div>
+
+    <dl class="info-grid">
+      <dt>Входной файл</dt>
+      <dd><code class="ic">id_000000,sig_11,src_000000,time_206,execs_19,op_havoc,rep_4</code> (34 байт)</dd>
+      <dt>Хеш стека</dt>
+      <dd><code class="ic">f260620a271ed82a</code></dd>
+      <dt>Источник</dt>
+      <dd>default</dd>
+    </dl>
+
+    <div class="tags">
+      <span class="tag">ERROR_SEGFAULT — Нарушение доступа к памяти (SIGSEGV)</span>
+      <span class="tag">Код программы</span>
+    </div>
+
+    <div class="rec">
+      <b>Рекомендация по исправлению:</b> Проверьте обращения к памяти в указанной функции: валидность указателей, границы массивов, корректность индексов. Соберите с -fsanitize=address для точной диагностики. Сбой произошёл в dvcp.c:25. Инструкция перехода — возможно повреждение указателя на функцию или vtable.
+    </div>
+
+    <h3>Стек вызовов (backtrace)</h3>
+    <pre>#0  stack_operation () at dvcp.c:25
+#1  0x000055555555d926 in stack_operation () at dvcp.c:25
+#2  0x000055555555d926 in stack_operation () at dvcp.c:25
+#3  0x000055555555d926 in stack_operation () at dvcp.c:25
+#4  0x000055555555d926 in stack_operation () at dvcp.c:25
+#5  0x000055555555d926 in stack_operation () at dvcp.c:25
+#6  0x000055555555d926 in stack_operation () at dvcp.c:25
+#7  0x000055555555d926 in stack_operation () at dvcp.c:25
+#8  0x000055555555d926 in stack_operation () at dvcp.c:25
+#9  0x000055555555d926 in stack_operation () at dvcp.c:25
+#10 0x000055555555d926 in stack_operation () at dvcp.c:25
+#11 0x000055555555d926 in stack_operation () at dvcp.c:25
+#12 0x000055555555d926 in stack_operation () at dvcp.c:25
+#13 0x000055555555d926 in stack_operation () at dvcp.c:25
+#14 0x000055555555d926 in stack_operation () at dvcp.c:25
+</pre>
+
+    <h3>Инструкция сбоя</h3>
+    <pre>call   0x55555555d920 &lt;stack_operation&gt;</pre>
+
+    <details>
+      <summary style="cursor:pointer; color: var(--text2); font-size: 0.85rem; margin: 8px 0;">Полный вывод GDB (развернуть)</summary>
+      <pre style="max-height: 600px;">
+This GDB supports auto-downloading debuginfo from the following URLs:
+  &lt;https://debuginfod.ubuntu.com&gt;
+Debuginfod has been disabled.
+To make this setting permanent, add &#39;set debuginfod enabled off&#39; to .gdbinit.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library &#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;.
+
+Program received signal SIGSEGV, Segmentation fault.
+stack_operation () at dvcp.c:25
+#0  stack_operation () at dvcp.c:25
+#1  0x000055555555d926 in stack_operation () at dvcp.c:25
+#2  0x000055555555d926 in stack_operation () at dvcp.c:25
+#3  0x000055555555d926 in stack_operation () at dvcp.c:25
+#4  0x000055555555d926 in stack_operation () at dvcp.c:25
+#5  0x000055555555d926 in stack_operation () at dvcp.c:25
+#6  0x000055555555d926 in stack_operation () at dvcp.c:25
+#7  0x000055555555d926 in stack_operation () at dvcp.c:25
+#8  0x000055555555d926 in stack_operation () at dvcp.c:25
+#9  0x000055555555d926 in stack_operation () at dvcp.c:25
+#10 0x000055555555d926 in stack_operation () at dvcp.c:25
+#11 0x000055555555d926 in stack_operation () at dvcp.c:25
+#12 0x000055555555d926 in stack_operation () at dvcp.c:25
+#13 0x000055555555d926 in stack_operation () at dvcp.c:25
+#14 0x000055555555d926 in stack_operation () at dvcp.c:25
+#15 0x000055555555d926 in stack_operation () at dvcp.c:25
+#16 0x000055555555d926 in stack_operation () at dvcp.c:25
+#17 0x000055555555d926 in stack_operation () at dvcp.c:25
+#18 0x000055555555d926 in stack_operation () at dvcp.c:25
+#19 0x000055555555d926 in stack_operation () at dvcp.c:25
+rax            0x6                 6
+rbx            0x1                 1
+rcx            0x1                 1
+rdx            0x0                 0
+rsi            0x7ffff7e045c0      140737352058304
+rdi            0x7fffffffd5d0      140737488344528
+rbp            0x7fffffffd870      0x7fffffffd870
+rsp            0x7fffff7ff000      0x7fffff7ff000
+r8             0x73                115
+r9             0x0                 0
+r10            0xffffffff          4294967295
+r11            0x0                 0
+r12            0x2                 2
+r13            0x0                 0
+r14            0x555555560270      93824992281200
+r15            0x7ffff7ffd000      140737354125312
+rip            0x55555555d921      0x55555555d921 &lt;stack_operation+1&gt;
+eflags         0x10297             [ CF PF AF SF IF RF ]
+cs             0x33                51
+ss             0x2b                43
+ds             0x0                 0
+es             0x0                 0
+fs             0x0                 0
+gs             0x0                 0
+fs_base        0x7ffff7fb5800      140737353832448
+gs_base        0x0                 0
+=&gt; 0x55555555d921 &lt;stack_operation+1&gt;:	call   0x55555555d920 &lt;stack_operation&gt;
+SI_ADDR=$1 = 0x7fffff7feff8
+
+warning: 25	dvcp.c: No such file or directory
+</pre>
+    </details>
+  </div>
+</details>
+
+<!-- ===== Error type reference ===== -->
+<h2>Справочник типов ошибок</h2>
+<table>
+  <tr><th>Категория</th><th>Код ошибки</th><th>Описание</th><th>Уровень</th></tr>
+  <tr><td>Память</td><td><code>ERROR_SEGFAULT</code></td><td>Общее нарушение доступа к памяти</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td>Память</td><td><code>ERROR_ABORT</code></td><td>Аварийное завершение (assert, double-free, heap corruption)</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td>Память</td><td><code>ERROR_BUSERROR</code></td><td>Ошибка шины, некорректное выравнивание адреса</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td>Процессор</td><td><code>ERROR_ILL</code></td><td>Недопустимая инструкция (часто UBSan trap)</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+  <tr><td>Арифметика</td><td><code>ERROR_FPE</code></td><td>Деление на ноль, переполнение</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
+  <tr><td>Время</td><td><code>ERROR_TIMEOUT</code></td><td>Превышение лимита времени выполнения</td><td><span class="badge LOW">LOW</span></td></tr>
+  <tr><td>Неизвестно</td><td><code>ERROR_UNKNOWN</code></td><td>Не удалось классифицировать</td><td><span class="badge LOW">LOW</span></td></tr>
+</table>
+
+<!-- ===== Exploitability reference ===== -->
+<h2>Оценка эксплуатируемости</h2>
+<p style="font-size: 0.85rem; color: var(--text2); margin-bottom: 12px;">
+  Оценка показывает, насколько обнаруженная уязвимость близка к практической эксплуатации (т.е. может ли злоумышленник
+  использовать её для выполнения произвольного кода, повышения привилегий или утечки данных). Оценка формируется
+  на основе балльной системы из трёх компонентов: тип уязвимости (CWE), таксономия поведения (место сбоя, область памяти,
+  состояние потока управления) и данные отладчика (адрес сбоя, тип инструкции).
+</p>
+<table>
+  <tr><th>Уровень</th><th>Описание</th><th>Примеры</th></tr>
+  <tr>
+    <td><span class="exploit-badge EXPLOITABLE">Эксплуатируемая</span></td>
+    <td>Прямой контроль потока выполнения: указатель инструкций ($pc) повреждён или переход по контролируемому адресу</td>
+    <td>Возврат на невалидный адрес, повреждённый косвенный вызов (vtable/GOT), $pc в невыделенной памяти</td>
+  </tr>
+  <tr>
+    <td><span class="exploit-badge PROBABLY_EXPLOITABLE">Вероятно эксплуатируемая</span></td>
+    <td>Запись в память или повреждение heap-метаданных без прямого контроля $pc</td>
+    <td>Out-of-bounds write (CWE-787), Use-after-free (CWE-416), Double-free (CWE-415), Format string (CWE-134)</td>
+  </tr>
+  <tr>
+    <td><span class="exploit-badge PROBABLY_NOT_EXPLOITABLE">Вероятно не эксплуатируемая</span></td>
+    <td>Чтение за пределами буфера, детерминированный NULL deref или арифметическая ошибка — обычно приводят к DoS, но не RCE</td>
+    <td>Out-of-bounds read (CWE-125), NULL dereference (CWE-476), Division by zero (CWE-369), Integer overflow (CWE-190)</td>
+  </tr>
+  <tr>
+    <td><span class="exploit-badge UNKNOWN">Не определено</span></td>
+    <td>Недостаточно данных для оценки — тип уязвимости не определён или отсутствует информация от отладчика</td>
+    <td>UBSan trap без маппинга, crash без backtrace, неизвестный сигнал</td>
+  </tr>
+</table>
+
+<!-- ===== Grouping ===== -->
+<h2>Группировка по характеристикам</h2>
+<div class="group-grid">
+  <div class="group-box">
+    <h4>По типу сигнала</h4>
+    <table>
+      <tr><th>Тип</th><th>Кол-во</th></tr>
+      <tr><td>ERROR_SEGFAULT — Нарушение доступа к памяти (SIGSEGV)</td><td>1</td></tr>
+    </table>
+  </div>
+  <div class="group-box">
+    <h4>По эксплуатируемости</h4>
+    <table>
+      <tr><th>Оценка</th><th>Кол-во</th></tr>
+      <tr><td>Вероятно не эксплуатируемая</td><td>1</td></tr>
+    </table>
+  </div>
+  <div class="group-box">
+    <h4>По месту сбоя</h4>
+    <table>
+      <tr><th>Место</th><th>Кол-во</th></tr>
+      <tr><td>Код программы</td><td>1</td></tr>
+    </table>
+  </div>
+  <div class="group-box">
+    <h4>По области памяти</h4>
+    <table>
+      <tr><th>Область</th><th>Кол-во</th></tr>
+      <tr><td>Неизвестно</td><td>1</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== GOST compliance ===== -->
+<h2>Соответствие ГОСТ Р 56939-2024</h2>
+<div class="gost-box">
+  <h4>Защита информации. Разработка безопасного программного обеспечения. Общие требования</h4>
+  <p style="font-size: 0.85rem; color: var(--text2); margin-bottom: 12px;">
+    Данный отчёт формирует артефакты, требуемые следующими пунктами стандарта:
+  </p>
+  <ul>
+    <li>
+      <span class="gost-check">[п. 5.11.3.6]</span> Отчёт по результатам фаззинг-тестирования —
+      зафиксированы: длительность тестирования, количество аварийных завершений работы ПО
+      (2), количество найденных путей выполнения,
+      результаты анализа аварийных завершений с классификацией по CWE и типам ошибок.
+    </li>
+    <li>
+      <span class="gost-check">[п. 5.11.2.7—5.11.2.8]</span> Фаззинг-тестирование —
+      обработаны результаты фаззинг-тестирования AFL++ с использованием тестовых коллекций входных данных (seeds).
+    </li>
+    <li>
+      <span class="gost-check">[п. 5.11.2.9]</span> Устранение выявленных ошибок —
+      для каждого недостатка сформирована рекомендация по исправлению с указанием
+      конкретных мер (флаги компилятора, безопасные API, санитайзеры).
+    </li>
+    <li>
+      <span class="gost-check">[п. 5.5.3.3]</span> Управление недостатками ПО —
+      каждый недостаток имеет: уникальный идентификатор (хеш стека),
+      описание (CWE / ERROR_*), приоритет (CRITICAL / HIGH / MEDIUM / LOW),
+      текущий статус обработки.
+    </li>
+  </ul>
+  <p class="gost-ref">
+    ГОСТ Р 56939-2024 «Защита информации. Разработка безопасного программного обеспечения. Общие требования»
+    (утв. Приказом Росстандарта от 24.10.2024 № 1504-ст, введён 20.12.2024)
+  </p>
+</div>
+
+<!-- ===== Fuzzer stats ===== -->
+<h2>Статистика фаззера</h2>
+<table>
+  <tr>
+    <th>Экземпляр</th><th>Исполнений</th><th>Скорость</th>
+    <th>Путей</th><th>Крашей</th><th>Версия AFL</th>
+  </tr>
+  <tr>
+    <td>default</td>
+    <td>30,797</td>
+    <td>218 exec/s</td>
+    <td>1</td>
+    <td>2</td>
+    <td>++4.41a</td>
+  </tr>
+</table>
+
+<footer>
+  Сгенерировано автоматически &bull; <b>FuzzRay</b> &bull; 17.04.2026 14:01:55
+</footer>
+
+</div>
+</body>
+</html>
