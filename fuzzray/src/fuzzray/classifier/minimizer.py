@@ -23,7 +23,7 @@ def minimize(
     crash_file: Path,
     target_args: str = "@@",
     output_dir: Path | None = None,
-    timeout: int = 120,
+    timeout: int = 600,
 ) -> MinimizeResult | None:
     if not _have_afl_tmin() or not target.exists() or not crash_file.exists():
         return None
@@ -57,8 +57,8 @@ def minimize(
     try:
         proc = subprocess.run(
             cmd,
-            capture_output=True,
-            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             timeout=timeout,
             check=False,
             env={**__import__("os").environ, **env},
