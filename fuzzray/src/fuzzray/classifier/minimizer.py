@@ -33,7 +33,8 @@ def minimize(
     if output_dir is None:
         output_dir = Path(tempfile.gettempdir()) / "fuzzray_min"
     output_dir.mkdir(parents=True, exist_ok=True)
-    out_path = output_dir / f"min_{crash_file.stem}_{crash_file.stat().st_ino}"
+    safe_stem = "".join(c if c.isalnum() or c in "-_" else "_" for c in crash_file.stem)
+    out_path = output_dir / f"min_{safe_stem}_{crash_file.stat().st_ino}"
 
     cmd = [
         "afl-tmin",
