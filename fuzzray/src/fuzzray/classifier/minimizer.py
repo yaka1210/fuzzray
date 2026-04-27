@@ -54,15 +54,17 @@ def minimize(
 
     env = {"AFL_NO_AFFINITY": "1", "AFL_SKIP_CPUFREQ": "1", "AFL_NO_UI": "1"}
 
+    log_path = output_dir / f"{out_path.name}.log"
     try:
-        proc = subprocess.run(
-            cmd,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=timeout,
-            check=False,
-            env={**__import__("os").environ, **env},
-        )
+        with log_path.open("w") as log:
+            proc = subprocess.run(
+                cmd,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=timeout,
+                check=False,
+                env={**__import__("os").environ, **env},
+            )
     except (subprocess.TimeoutExpired, OSError):
         return None
 
