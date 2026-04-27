@@ -80,7 +80,7 @@ def run_pipeline(
         repro_dir.mkdir(parents=True, exist_ok=True)
         for i, c in enumerate(crashes, 1):
             script = render_reproducer(c, i, target, target_args)
-            c.reproducer_script = script
+            c.has_reproducer = True
             sh = repro_dir / f"reproduce_{i:03d}_{c.top_cwe.replace('-', '_')}.sh"
             sh.write_text(script, encoding="utf-8")
             sh.chmod(0o755)

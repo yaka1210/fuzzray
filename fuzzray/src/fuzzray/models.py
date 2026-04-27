@@ -26,7 +26,6 @@ class Crash(BaseModel):
     raw: CrashRaw
     duplicate_count: int = 1
     duplicate_paths: list[Path] = Field(default_factory=list)
-    stack_hash: str | None = None
 
     cwe_distribution: dict[str, float] = Field(default_factory=dict)
     taxonomy: CrashTaxonomy = Field(default_factory=CrashTaxonomy)
@@ -49,7 +48,7 @@ class Crash(BaseModel):
 
     minimized_size: int | None = None
     minimized_hex: str | None = None
-    reproducer_script: str | None = None
+    has_reproducer: bool = False
 
     @property
     def top_cwe(self) -> str:

@@ -69,7 +69,6 @@ def deduplicate_by_stack(crashes: list[Crash]) -> list[Crash]:
         if sh is None:
             untouched.append(c)
             continue
-        c.stack_hash = sh
         dedup_key = f"{sh}:{c.top_cwe}"
         existing = by_stack.get(dedup_key)
         if existing is None:

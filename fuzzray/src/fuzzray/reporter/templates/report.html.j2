@@ -310,7 +310,7 @@
     {% endif %}
     {% endif %}
 
-    {% if c.reproducer_script %}
+    {% if c.has_reproducer %}
     <p class="min-info">Скрипт воспроизведения: <code class="ic">reproduce_{{ '%03d' % loop.index }}_{{ c.top_cwe.replace('-', '_') }}.sh</code> в каталоге репродьюсеров рядом с отчётом. Запуск: <code class="ic">bash reproduce_...sh</code>.</p>
     {% endif %}
 
