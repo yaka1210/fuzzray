@@ -1,29 +1,49 @@
 from __future__ import annotations
 
+import re
+
 from fuzzray.classifier.gdb_runner import GdbResult
 from fuzzray.models import CrashTaxonomy
 
-_LIBC_ALLOC = {"malloc", "free", "realloc", "calloc", "_int_free", "_int_malloc"}
-_LIBC_STRING = {"memcpy", "memmove", "strcpy", "strncpy", "strlen", "strcat", "memset"}
-_LIBC_IO = {"vfprintf", "fprintf", "printf", "fwrite", "vsnprintf", "snprintf"}
+_LIBC_ALLOC = {"malloc", "free", "realloc", "calloc", "_int_free", "_int_malloc",
+               "__libc_free", "__libc_malloc", "cfree"}
+_LIBC_STRING = {"memcpy", "memmove", "strcpy", "strncpy", "strlen", "strcat",
+                "strncat", "memset", "memcmp", "strcmp", "strncmp", "stpcpy",
+                "wmemcpy", "wcscpy"}
+_LIBC_IO = {"vfprintf", "fprintf", "printf", "fwrite", "vsnprintf", "snprintf",
+            "vprintf", "fread", "puts", "fputs"}
+_NOISE_FUNCS = {"__pthread_kill", "__pthread_kill_implementation",
+                "__pthread_kill_internal", "__GI_raise", "raise",
+                "__GI_abort", "abort", "__libc_message", "__assert_fail",
+                "__libc_start_main", "_start"}
+
+_FUNC_RE = re.compile(r"\bin\s+([\w:]+)\s*\(")
+
+
+def _extract_func(frame: str) -> str | None:
+    m = _FUNC_RE.search(frame)
+    return m.group(1) if m else None
 
 
 def _crash_site(backtrace: list[str]) -> str:
     if not backtrace:
         return "unknown"
-    top = backtrace[0]
-    base = top.split("@")[0].split("+")[0]
-    if base in _LIBC_ALLOC:
-        return "libc_alloc"
-    if base in _LIBC_STRING:
-        return "libc_string"
-    if base in _LIBC_IO:
-        return "libc_io"
-    if base.startswith("_dl_") or "ld-linux" in top:
-        return "dynamic_linker"
-    if base.startswith("__") and "syscall" in base:
-        return "kernel_syscall"
-    return "user_code"
+    for frame in backtrace:
+        func = _extract_func(frame)
+        if not func or func in _NOISE_FUNCS or func.startswith("__ubsan_") or func.startswith("__asan_"):
+            continue
+        if func in _LIBC_ALLOC:
+            return "libc_alloc"
+        if func in _LIBC_STRING:
+            return "libc_string"
+        if func in _LIBC_IO:
+            return "libc_io"
+        if func.startswith("_dl_") or "ld-linux" in frame:
+            return "dynamic_linker"
+        if func.startswith("__") and "syscall" in func:
+            return "kernel_syscall"
+        return "user_code"
+    return "unknown"
 
 
 def _memory_region(si_addr: int | None, fallback: str | None) -> str:

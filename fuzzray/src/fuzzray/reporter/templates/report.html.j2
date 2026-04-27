@@ -277,12 +277,6 @@
         </ul></details>
       </dd>
       {% endif %}
-      {% if c.stack_hash %}
-      <dt>Хеш стека</dt>
-      <dd><code class="ic">{{ c.stack_hash }}</code></dd>
-      {% endif %}
-      <dt>Источник</dt>
-      <dd>{{ c.raw.fuzzer_instance }}</dd>
       <dt>Эксплуатируемость</dt>
       <dd><span class="exploit-badge {{ c.exploitability }}">{{ exploitability_names.get(c.exploitability, c.exploitability) }}</span></dd>
       <dt>Severity Score</dt>
@@ -290,12 +284,12 @@
     </dl>
 
     <div class="tags">
-      <span class="tag">{{ signal_class_names.get(c.taxonomy.signal_class, c.taxonomy.signal_class) }}</span>
+      <span class="tag" title="Класс сигнала ОС">сигнал: {{ signal_class_names.get(c.taxonomy.signal_class, c.taxonomy.signal_class) }}</span>
       {% if c.taxonomy.crash_site_kind != 'unknown' %}
-      <span class="tag">{{ crash_site_names.get(c.taxonomy.crash_site_kind, c.taxonomy.crash_site_kind) }}</span>
+      <span class="tag" title="Где именно произошёл сбой">место: {{ crash_site_names.get(c.taxonomy.crash_site_kind, c.taxonomy.crash_site_kind) }}</span>
       {% endif %}
       {% if c.taxonomy.memory_region != 'unknown' %}
-      <span class="tag">{{ memory_region_names.get(c.taxonomy.memory_region, c.taxonomy.memory_region) }}</span>
+      <span class="tag" title="Область памяти, к которой шло обращение">регион: {{ memory_region_names.get(c.taxonomy.memory_region, c.taxonomy.memory_region) }}</span>
       {% endif %}
     </div>
 
