@@ -33,7 +33,6 @@ class Crash(BaseModel):
     exploitability: str = "UNKNOWN"
     evidence: str = ""
 
-    severity_score: float = 0.0
     severity_level: str = "LOW"
 
     backtrace: list[str] = Field(default_factory=list)
