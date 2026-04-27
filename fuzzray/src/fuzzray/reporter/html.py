@@ -6,6 +6,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from collections import Counter
 
 from fuzzray.classifier.cwe_rules import (
+    CWE_RECOMMENDATIONS,
     CWE_TITLES,
     build_dynamic_recommendation,
 )
@@ -103,6 +104,7 @@ def render_html(report: Report) -> str:
         lstrip_blocks=True,
     )
     env.globals["cwe_titles"] = CWE_TITLES
+    env.globals["cwe_recommendations"] = CWE_RECOMMENDATIONS
     env.globals["signal_class_names"] = SIGNAL_CLASS_NAMES
     env.globals["crash_site_names"] = CRASH_SITE_NAMES
     env.globals["memory_region_names"] = MEMORY_REGION_NAMES
