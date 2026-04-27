@@ -8,7 +8,6 @@ CWE_SEVERITY: dict[str, str] = {
     "CWE-415": "HIGH",       # Double Free
     "CWE-125": "HIGH",       # OOB Read
     "CWE-119": "HIGH",       # Generic Buffer Issue
-    "CWE-134": "HIGH",       # Format String
     "CWE-476": "MEDIUM",     # NULL Pointer Dereference
     "CWE-190": "MEDIUM",     # Integer Overflow
     "CWE-681": "MEDIUM",     # Type Conversion

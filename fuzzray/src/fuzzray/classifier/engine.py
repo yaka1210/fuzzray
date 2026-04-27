@@ -23,8 +23,6 @@ _ALLOC_FUNCS = {"malloc", "free", "realloc", "calloc", "_int_free", "_int_malloc
 _STRING_FUNCS = {"memcpy", "memmove", "strcpy", "strncpy", "strlen", "strcat",
                  "strncat", "memset", "memcmp", "strcmp", "strncmp", "stpcpy",
                  "wmemcpy", "wcscpy"}
-_IO_FUNCS = {"printf", "fprintf", "vfprintf", "sprintf", "snprintf", "vsnprintf",
-             "vprintf", "fwrite", "fread", "puts", "fputs"}
 
 _WRITE_INSN_RE = re.compile(r"mov[a-z]*\s+.+,\s*(?:DWORD|QWORD|BYTE|WORD)?\s*(?:PTR\s*)?\[", re.I)
 _READ_INSN_RE = re.compile(r"mov[a-z]*\s+\w+,\s*(?:DWORD|QWORD|BYTE|WORD)?\s*(?:PTR\s*)?\[", re.I)
@@ -90,7 +88,6 @@ def _gdb_heuristics(gdb: GdbResult, signal_class: str) -> dict[str, float]:
     all_funcs = _extract_all_funcs(gdb.backtrace)
     has_alloc = any(f in _ALLOC_FUNCS for f in all_funcs)
     has_string = any(f in _STRING_FUNCS for f in all_funcs)
-    has_io = any(f in _IO_FUNCS for f in all_funcs)
 
     if has_alloc:
         hints["CWE-416"] = max(hints.get("CWE-416", 0), 0.5)
@@ -98,8 +95,6 @@ def _gdb_heuristics(gdb: GdbResult, signal_class: str) -> dict[str, float]:
     if has_string:
         hints["CWE-787"] = max(hints.get("CWE-787", 0), 0.6)
         hints["CWE-125"] = max(hints.get("CWE-125", 0), 0.5)
-    if has_io:
-        hints["CWE-134"] = max(hints.get("CWE-134", 0), 0.4)
 
     raw = gdb.raw
     if _GLIBC_DOUBLE_FREE_RE.search(raw):
