@@ -11,8 +11,6 @@ class CrashTaxonomy(BaseModel):
     crash_site_kind: str = "unknown"
     memory_region: str = "unknown"
     control_flow_state: str = "unknown"
-    discovery_depth: str = "unknown"
-    input_class: str = "unknown"
 
 
 class CrashRaw(BaseModel):

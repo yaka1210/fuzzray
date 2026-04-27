@@ -65,14 +65,6 @@ MEMORY_REGION_NAMES: dict[str, str] = {
     "unknown": "Неизвестно",
 }
 
-CONTROL_FLOW_NAMES: dict[str, str] = {
-    "normal": "Нормальный",
-    "ret_to_unmapped": "Возврат в невалидный адрес",
-    "indirect_call_corrupt": "Повреждённый косвенный вызов",
-    "stack_exhaustion": "Переполнение стека вызовов",
-    "unknown": "Неизвестно",
-}
-
 EXPLOITABILITY_NAMES: dict[str, str] = {
     "EXPLOITABLE": "Эксплуатируемая",
     "PROBABLY_EXPLOITABLE": "Вероятно эксплуатируемая",
@@ -83,15 +75,10 @@ EXPLOITABILITY_NAMES: dict[str, str] = {
 
 def _build_recommendation(c: Crash) -> str:
     return build_dynamic_recommendation(
-        top_cwe=c.top_cwe,
         signal_class=c.taxonomy.signal_class,
-        crash_site=c.taxonomy.crash_site_kind,
         backtrace=c.backtrace,
-        faulting_instruction=c.faulting_instruction,
         crash_function=c.crash_function,
         crash_location=c.crash_location,
-        source_snippet=c.source_snippet,
-        source_snippet_crash_line=c.source_snippet_crash_line,
     )
 
 
@@ -106,7 +93,6 @@ def render_html(report: Report) -> str:
     env.globals["signal_class_names"] = SIGNAL_CLASS_NAMES
     env.globals["crash_site_names"] = CRASH_SITE_NAMES
     env.globals["memory_region_names"] = MEMORY_REGION_NAMES
-    env.globals["control_flow_names"] = CONTROL_FLOW_NAMES
     env.globals["exploitability_names"] = EXPLOITABILITY_NAMES
     env.globals["error_categories"] = ERROR_CATEGORIES
     env.globals["error_descriptions"] = ERROR_DESCRIPTIONS

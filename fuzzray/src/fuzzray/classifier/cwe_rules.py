@@ -27,15 +27,10 @@ ERROR_RECOMMENDATIONS: dict[str, str] = {
 
 
 def build_dynamic_recommendation(
-    top_cwe: str,
     signal_class: str,
-    crash_site: str,
     backtrace: list[str],
-    faulting_instruction: str | None,
     crash_function: str | None = None,
     crash_location: str | None = None,
-    source_snippet: list[tuple[int, str]] | None = None,
-    source_snippet_crash_line: int | None = None,
 ) -> str:
     func_name = crash_function
     file_loc = crash_location

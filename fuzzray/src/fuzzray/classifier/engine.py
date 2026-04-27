@@ -49,14 +49,6 @@ _UBSAN_HANDLER_CWE: dict[int, tuple[str, float]] = {
 }
 
 
-def _extract_top_func(backtrace: list[str]) -> str | None:
-    for frame in backtrace:
-        m = _FUNC_RE.search(frame)
-        if m:
-            return m.group(1)
-    return None
-
-
 def _extract_all_funcs(backtrace: list[str]) -> list[str]:
     funcs: list[str] = []
     for frame in backtrace:

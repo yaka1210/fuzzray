@@ -362,12 +362,6 @@
     <dl class="info-grid">
       <dt>Входной файл</dt>
       <dd><code class="ic">{{ c.raw.path.name }}</code> ({{ c.raw.size }} байт)</dd>
-      {% if c.stack_hash %}
-      <dt>Хеш стека</dt>
-      <dd><code class="ic">{{ c.stack_hash }}</code></dd>
-      {% endif %}
-      <dt>Источник</dt>
-      <dd>{{ c.raw.fuzzer_instance }}</dd>
     </dl>
 
     <div class="tags">
