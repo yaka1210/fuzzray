@@ -294,17 +294,6 @@
       {% endif %}
     </div>
 
-    {% if c.backtrace %}
-    <h3>Стек вызовов (backtrace)</h3>
-    <pre>{% for f in c.backtrace[:15] %}{{ f }}
-{% endfor %}</pre>
-    {% endif %}
-
-    {% if c.faulting_instruction %}
-    <h3>Инструкция сбоя</h3>
-    <pre>{{ c.faulting_instruction }}{% if c.faulting_address is not none %}  @ 0x{{ '%x' % c.faulting_address }}{% endif %}</pre>
-    {% endif %}
-
     {% if c.source_snippet %}
     <h3>Исходный код в точке сбоя</h3>
     <div class="snippet">
@@ -324,10 +313,7 @@
     {% endif %}
 
     {% if c.reproducer_script %}
-    <details>
-      <summary style="cursor:pointer; color: var(--text2); font-size: 0.85rem; margin: 8px 0;">Скрипт-репродьюсер (bash)</summary>
-      <pre style="max-height: 400px;">{{ c.reproducer_script }}</pre>
-    </details>
+    <p class="min-info">Скрипт воспроизведения: <code class="ic">reproduce_{{ '%03d' % loop.index }}_{{ c.top_cwe.replace('-', '_') }}.sh</code> в каталоге репродьюсеров рядом с отчётом. Запуск: <code class="ic">bash reproduce_...sh</code>.</p>
     {% endif %}
 
     {% if c.gdb_output %}
@@ -391,17 +377,6 @@
     <div class="rec">
       <b>Локализация:</b> {{ error_recs[loop.index0] }}
     </div>
-
-    {% if c.backtrace %}
-    <h3>Стек вызовов (backtrace)</h3>
-    <pre>{% for f in c.backtrace[:15] %}{{ f }}
-{% endfor %}</pre>
-    {% endif %}
-
-    {% if c.faulting_instruction %}
-    <h3>Инструкция сбоя</h3>
-    <pre>{{ c.faulting_instruction }}{% if c.faulting_address is not none %}  @ 0x{{ '%x' % c.faulting_address }}{% endif %}</pre>
-    {% endif %}
 
     {% if c.gdb_output %}
     <details>
