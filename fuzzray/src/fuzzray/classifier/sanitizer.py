@@ -44,6 +44,10 @@ _RULES: list[tuple[re.Pattern[str], str, float]] = [
     # Misalignment → CWE-476 (best fit, true class CWE-704 not in our set)
     (re.compile(r"load of misaligned address|misaligned address \S+ for type", re.I), "CWE-476", 0.7),
 
+    # MemorySanitizer-specific messages
+    (re.compile(r"MemorySanitizer:\s*use[- ]of[- ]uninitialized[- ]value", re.I), "CWE-457", 0.97),
+    (re.compile(r"MemorySanitizer:\s*requested allocation", re.I), "CWE-190", 0.9),
+
     # Uninitialized / invalid load → CWE-457
     (re.compile(r"use[- ]of[- ]uninitialized[- ]value", re.I), "CWE-457", 0.95),
     (re.compile(r"load of value \S+, which is not a valid value for type", re.I), "CWE-457", 0.85),

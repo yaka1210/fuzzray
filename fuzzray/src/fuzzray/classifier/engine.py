@@ -139,6 +139,24 @@ def _is_stack_exhaustion(gdb: GdbResult) -> bool:
     return False
 
 
+_STACK_OVERFLOW_RE = re.compile(
+    r"(?:Sanitizer|MemorySanitizer|AddressSanitizer):\s*stack[- ]overflow(?!.*buffer)",
+    re.I,
+)
+
+
+def _is_recursive_stack_overflow(gdb: GdbResult) -> bool:
+    """True if crash is uncontrolled recursion (CWE-674, not in our set).
+
+    Combines two signals: an explicit sanitizer 'stack-overflow' message
+    (distinct from 'stack-buffer-overflow' which is CWE-787/125), and
+    the recursive-backtrace heuristic.
+    """
+    if _STACK_OVERFLOW_RE.search(gdb.raw):
+        return True
+    return _is_stack_exhaustion(gdb)
+
+
 def classify_one(
     crash: Crash,
     target: Path | None,
@@ -165,6 +183,13 @@ def classify_one(
                 gdb_hints = _gdb_heuristics(gdb, signal_class)
                 for k, v in gdb_hints.items():
                     dist[k] = max(dist.get(k, 0.0), v)
+
+            # Stack exhaustion (uncontrolled recursion) is CWE-674, which is
+            # not in our recognized set. Detect it both from sanitizer reports
+            # ("stack-overflow" without "buffer") and from recursive backtrace,
+            # then clear CWE classification so severity falls to signal-based.
+            if _is_recursive_stack_overflow(gdb):
+                dist.clear()
 
             crash.backtrace = symbolize_backtrace(target, gdb.backtrace) if target else gdb.backtrace
             crash.faulting_instruction = gdb.faulting_instruction
@@ -234,6 +259,8 @@ def classify(
                 gdb_hints = _gdb_heuristics(gdb_res, signal_class)
                 for k, v in gdb_hints.items():
                     dist[k] = max(dist.get(k, 0.0), v)
+            if _is_recursive_stack_overflow(gdb_res):
+                dist.clear()
             crash.backtrace = symbolize_backtrace(target, gdb_res.backtrace) if target else gdb_res.backtrace
             crash.faulting_instruction = gdb_res.faulting_instruction
             crash.faulting_address = gdb_res.faulting_address

@@ -132,7 +132,18 @@ def replay(
         "set pagination off",
         "set confirm off",
         "set print frame-arguments all",
-        "set environment ASAN_OPTIONS=abort_on_error=1:detect_leaks=1:symbolize=1",
+        # Disable ASLR so addresses are stable across runs (helps addr2line cache).
+        "set disable-randomization on",
+        # Pass SIGSEGV / SIGBUS to the program first, so that sanitizer signal
+        # handlers (MSan DEADLYSIGNAL, ASan signal interceptor) can print their
+        # diagnostics before the program aborts. We then stop on SIGABRT that
+        # the sanitizer raises after printing. SIGFPE / SIGILL are kept at GDB
+        # defaults: UBSan trap-mode emits SIGILL via ud1 instruction without
+        # any handler, and SIGFPE typically indicates a genuine div-by-zero
+        # caught by the kernel — both should stop in GDB so we can examine $pc.
+        "handle SIGSEGV nostop noprint pass",
+        "handle SIGBUS  nostop noprint pass",
+        "handle SIGABRT stop print nopass",
         f"run {run_args}",
         "bt 20",
         "info registers",
@@ -146,6 +157,17 @@ def replay(
         cmd += ["-ex", line]
     cmd += ["--args", str(target)]
 
+    # Force all sanitizers to print full diagnostic and abort, so GDB captures
+    # the report and we get SIGABRT for downstream classification.
+    import os
+    sanitizer_env = {
+        **os.environ,
+        "ASAN_OPTIONS": "abort_on_error=1:detect_leaks=1:symbolize=1",
+        "MSAN_OPTIONS": "abort_on_error=1:halt_on_error=1:symbolize=1",
+        "UBSAN_OPTIONS": "abort_on_error=1:halt_on_error=1:print_stacktrace=1:symbolize=1",
+        "LSAN_OPTIONS": "symbolize=1",
+    }
+
     try:
         proc = subprocess.run(
             cmd,
@@ -153,6 +175,7 @@ def replay(
             text=True,
             timeout=timeout,
             check=False,
+            env=sanitizer_env,
         )
     except (subprocess.TimeoutExpired, OSError):
         return None
