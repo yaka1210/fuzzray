@@ -5,7 +5,6 @@ CWE_TITLES: dict[str, str] = {
     "CWE-125": "Чтение за пределами буфера",
     "CWE-415": "Двойное освобождение памяти",
     "CWE-416": "Использование памяти после освобождения",
-    "CWE-119": "Некорректное ограничение операций в пределах буфера",
     "CWE-476": "Разыменование нулевого указателя",
     "CWE-190": "Целочисленное переполнение",
     "CWE-369": "Деление на ноль",
@@ -94,7 +93,7 @@ def signal_to_cwe_prior(sig: int | None) -> dict[str, float]:
     if sig == 11:  # SIGSEGV
         return {"CWE-787": 0.25, "CWE-125": 0.25, "CWE-476": 0.2, "unknown": 0.3}
     if sig == 6:  # SIGABRT
-        return {"CWE-787": 0.3, "CWE-416": 0.2, "CWE-119": 0.2, "unknown": 0.3}
+        return {"CWE-787": 0.3, "CWE-416": 0.3, "CWE-415": 0.2, "unknown": 0.2}
     if sig == 8:  # SIGFPE
         return {"CWE-369": 0.7, "CWE-190": 0.2, "unknown": 0.1}
     if sig == 7:  # SIGBUS
