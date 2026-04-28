@@ -13,16 +13,24 @@ _RULES: list[tuple[re.Pattern[str], str, float]] = [
     (re.compile(r"allocation[- ]size[- ]too[- ]big", re.I), "CWE-190", 0.9),
     (re.compile(r"SEGV on unknown address 0x0*[0-9a-f]{1,3}\b", re.I), "CWE-476", 0.9),
     (re.compile(r"null[- ]deref", re.I), "CWE-476", 0.95),
-    # UBSan messages — match both handler-name format (hyphens) and runtime text (spaces)
+    # UBSan text messages — match both handler-name format (hyphens) and runtime text (spaces)
     (re.compile(r"signed[- ]integer[- ]overflow", re.I), "CWE-190", 0.95),
     (re.compile(r"unsigned[- ]integer[- ]overflow", re.I), "CWE-190", 0.9),
-    (re.compile(r"shift[- ]exponent\s+\S+\s+is\s+too\s+large|shift[- ]out[- ]of[- ]bounds", re.I), "CWE-190", 0.9),
+    (re.compile(r"shift[- ]exponent\s+\S+\s+is\s+too\s+large|shift[- ]out[- ]of[- ]bounds|left shift of negative value|left shift of \S+ by \S+ places", re.I), "CWE-190", 0.9),
     (re.compile(r"(?:integer[- ]divide[- ]by[- ]zero|division by zero|divide by zero)", re.I), "CWE-369", 0.97),
     (re.compile(r"use[- ]of[- ]uninitialized[- ]value", re.I), "CWE-457", 0.95),
     (re.compile(r"load of misaligned|misaligned address", re.I), "CWE-457", 0.6),
-    (re.compile(r"implicit conversion|conversion[- ]from[- ]type|float[- ]cast[- ]overflow", re.I), "CWE-681", 0.85),
+    (re.compile(r"implicit conversion|conversion[- ]from[- ]type|float[- ]cast[- ]overflow|is outside the range of representable values|(?:inf|nan) is outside", re.I), "CWE-681", 0.85),
     (re.compile(r"index\s+\S+\s+out of bounds for type", re.I), "CWE-125", 0.7),
     (re.compile(r"member access within null pointer|reference binding to null pointer|null pointer", re.I), "CWE-476", 0.85),
+    # UBSan handler functions in backtrace — works even when no text message printed
+    (re.compile(r"__ubsan_handle_(?:add|sub|mul|negate|shift_out_of_bounds)_overflow", re.I), "CWE-190", 0.85),
+    (re.compile(r"__ubsan_handle_divrem_overflow", re.I), "CWE-369", 0.9),
+    (re.compile(r"__ubsan_handle_(?:float_cast_overflow|implicit_conversion)", re.I), "CWE-681", 0.85),
+    (re.compile(r"__ubsan_handle_out_of_bounds", re.I), "CWE-125", 0.7),
+    (re.compile(r"__ubsan_handle_(?:pointer_overflow|nonnull_arg|type_mismatch)", re.I), "CWE-476", 0.7),
+    (re.compile(r"__ubsan_handle_load_invalid_value", re.I), "CWE-457", 0.75),
+    (re.compile(r"__ubsan_handle_alignment_assumption|__ubsan_handle_(?:builtin_unreachable|missing_return)", re.I), "CWE-457", 0.5),
 ]
 
 _MEMORY_REGION_RE = re.compile(
