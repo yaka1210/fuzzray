@@ -11,9 +11,24 @@ _FRAME_FUNC_RE = re.compile(r"\bin\s+([\w:]+)\s*\(")
 _FRAME_LOC_RE = re.compile(r"\bat\s+(\S+:\d+)$")
 _LIBC_PATH_RE = re.compile(r"/nptl/|/sysdeps/|/glibc-|/libc\.so")
 _NOISE_FUNCS = {
+    # libc / pthread internals
     "__pthread_kill", "__GI_raise", "__GI_abort", "raise", "abort",
+    "pthread_kill",
     "__libc_message", "__assert_fail", "_start", "__libc_start_main",
-    "__ubsan_handle", "__asan_report",
+    # ASan / UBSan / MSan / LSan / TSan internal frames (C++ namespaces)
+    "__sanitizer", "__asan", "__ubsan", "__msan", "__lsan", "__tsan",
+    # ASan/MSan/UBSan handler functions (C symbols)
+    "__ubsan_handle", "__asan_report", "__msan_warning",
+    # ASan / sanitizer interceptors for libc functions
+    "__interceptor_", "printf_common",
+    # UBSan internal report builders
+    "handleIntegerOverflowImpl", "handleDivremOverflowImpl",
+    "handleShiftOutOfBoundsImpl", "handleTypeMismatchImpl",
+    "handleNonNullArgImpl", "handleFloatCastOverflowImpl",
+    "handleImplicitConversion", "handleOutOfBoundsImpl",
+    "handleBuiltinUnreachableImpl", "handleMissingReturnImpl",
+    # signal handler synthetic frame
+    "<signal",
 }
 
 

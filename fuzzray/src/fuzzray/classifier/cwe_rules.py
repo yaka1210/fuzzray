@@ -59,9 +59,23 @@ def _is_noise(frame: str) -> bool:
     if _NOISE_FRAME_RE is None:
         import re
         _NOISE_FRAME_RE = re.compile(
-            r"__pthread_kill|__GI_raise|__GI_abort|"
+            # libc / pthread / standard signal entry points
+            r"__pthread_kill|__GI_raise|__GI_abort|\bpthread_kill\b|\braise\b|\babort\b|"
+            r"__libc_message|__assert_fail|"
+            # sanitizer C-style symbols
             r"__asan_|__sanitizer_|__interceptor_|"
-            r"__ubsan_|__msan_|__lsan_|"
+            r"__ubsan_|__msan_|__lsan_|__tsan_|"
+            # sanitizer C++ namespace symbols
+            r"__sanitizer::|__asan::|__ubsan::|__msan::|__lsan::|__tsan::|"
+            r"printf_common|"
+            # UBSan internal report builders
+            r"handleIntegerOverflow|handleDivremOverflow|handleShiftOutOfBounds|"
+            r"handleTypeMismatch|handleNonNullArg|handleFloatCastOverflow|"
+            r"handleImplicitConversion|handleOutOfBounds|handleBuiltinUnreachable|"
+            r"handleMissingReturn|"
+            # signal handler synthetic frame
+            r"<signal handler called>|"
+            # standard libc paths
             r"/nptl/|/sysdeps/|/glibc-|"
             r"__libc_start|_start$"
         )
@@ -70,7 +84,8 @@ def _is_noise(frame: str) -> bool:
 
 def _extract_function(frame: str) -> str | None:
     import re
-    m = re.search(r"\bin\s+(\w+)\s*\(", frame)
+    # Match function names that may include C++ namespaces (e.g. __sanitizer::Abort)
+    m = re.search(r"\bin\s+([\w:]+)\s*\(", frame)
     if m and m.group(1) not in ("optimized", "out"):
         return m.group(1)
     m = re.search(r"<([^+>]+)", frame)

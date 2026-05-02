@@ -9,12 +9,27 @@ _ADDR_RE = re.compile(r"0x[0-9a-f]+", re.I)
 _TOP_N_FRAMES = 5
 
 _NOISE_PATTERNS = re.compile(
-    r"__pthread_kill|__GI_raise|__GI_abort|"
+    # libc / pthread / signal entry points
+    r"__pthread_kill|__GI_raise|__GI_abort|\bpthread_kill\b|\braise\b|\babort\b|"
+    r"__libc_message|__assert_fail|"
+    # sanitizer C-style symbols
     r"__asan_|__sanitizer_|__interceptor_|"
-    r"__ubsan_|__msan_|__lsan_|"
-    r"ScopedInErrorReport|ReportGenericError|ReportDoubleFree|"
-    r"ReportAllocationSizeTooBig|ReportInvalidFree|"
+    r"__ubsan_|__msan_|__lsan_|__tsan_|"
+    # sanitizer C++ namespaces
+    r"__sanitizer::|__asan::|__ubsan::|__msan::|__lsan::|__tsan::|"
+    # sanitizer report builders
+    r"ScopedInErrorReport|ScopedReport|ReportGenericError|ReportDoubleFree|"
+    r"ReportAllocationSizeTooBig|ReportInvalidFree|ReportDeadlySignal|"
+    r"AsanOnDeadlySignal|"
+    # UBSan internal handlers
+    r"handleIntegerOverflow|handleDivremOverflow|handleShiftOutOfBounds|"
+    r"handleTypeMismatch|handleNonNullArg|handleFloatCastOverflow|"
+    r"handleImplicitConversion|handleOutOfBounds|"
     r"Allocator::|asan_malloc|printf_common|"
+    # signal handler synthetic frame
+    r"<signal handler called>|"
+    # libc paths and entry points
+    r"/nptl/|/sysdeps/|/glibc-|/libc\.so|"
     r"__libc_start|_start$"
 )
 
