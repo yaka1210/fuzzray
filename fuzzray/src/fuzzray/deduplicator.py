@@ -6,6 +6,8 @@ import re
 from fuzzray.models import Crash, CrashRaw
 
 _ADDR_RE = re.compile(r"0x[0-9a-f]+", re.I)
+_FUNC_IN_RE = re.compile(r"\bin\s+([\w:~<>]+)")
+_AT_LOC_RE = re.compile(r"\bat\s+(\S+:\d+)")
 _TOP_N_FRAMES = 5
 
 _NOISE_PATTERNS = re.compile(
@@ -48,6 +50,16 @@ def deduplicate(raw_crashes: list[CrashRaw]) -> list[Crash]:
 
 
 def _normalize_frame(frame: str) -> str:
+    """Extract 'FuncName file:line' from a GDB frame, stripping addresses and arguments."""
+    func_m = _FUNC_IN_RE.search(frame)
+    loc_m = _AT_LOC_RE.search(frame)
+    func = func_m.group(1) if func_m else None
+    loc = loc_m.group(1) if loc_m else None
+    if func and loc:
+        return f"{func} {loc}"
+    if func:
+        return func
+    # fallback for frames without 'in FuncName'
     f = _ADDR_RE.sub("", frame)
     return f.split("+")[0].strip()
 

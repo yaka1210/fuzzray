@@ -32,6 +32,9 @@ def build_dynamic_recommendation(
 ) -> str:
     func_name = crash_function
     file_loc = crash_location
+    # Sanitizer/libc noise symbols are not meaningful crash locations
+    if func_name and _is_noise(func_name):
+        func_name = None
     if (not func_name or not file_loc) and backtrace:
         for frame in backtrace:
             if _is_noise(frame):
