@@ -10,7 +10,7 @@ from fuzzray.classifier.cwe_rules import (
 )
 from fuzzray.classifier.exploitability import assess
 from fuzzray.classifier.gdb_runner import GdbResult, replay
-from fuzzray.classifier.sanitizer import parse_sanitizer_output
+from fuzzray.classifier.sanitizer import first_user_loc_from_sanitizer, parse_sanitizer_output
 from fuzzray.classifier.source_snippet import extract_snippet
 from fuzzray.classifier.symbolizer import first_user_frame, symbolize, symbolize_backtrace
 from fuzzray.classifier.taxonomy import build_taxonomy
@@ -207,6 +207,15 @@ def classify_one(
                 crash.crash_function = crash.crash_function or ufunc
                 crash.crash_location = crash.crash_location or uloc
 
+            # Upgrade to absolute path from sanitizer stack (ASan/UBSan frames
+            # include the full path; GDB 'at' gives only the basename).
+            if not (crash.crash_location and crash.crash_location.startswith("/")):
+                san_func, san_loc = first_user_loc_from_sanitizer(gdb.raw)
+                if san_loc:
+                    crash.crash_location = san_loc
+                if san_func and not crash.crash_function:
+                    crash.crash_function = san_func
+
             snippet = extract_snippet(crash.crash_location, target.parent if target else None)
             if snippet:
                 crash.source_snippet = snippet.lines
@@ -276,6 +285,13 @@ def classify(
                 ufunc, uloc = first_user_frame(crash.backtrace)
                 crash.crash_function = crash.crash_function or ufunc
                 crash.crash_location = crash.crash_location or uloc
+
+            if not (crash.crash_location and crash.crash_location.startswith("/")):
+                san_func, san_loc = first_user_loc_from_sanitizer(gdb_res.raw)
+                if san_loc:
+                    crash.crash_location = san_loc
+                if san_func and not crash.crash_function:
+                    crash.crash_function = san_func
 
             snippet = extract_snippet(crash.crash_location, target.parent if target else None)
             if snippet:

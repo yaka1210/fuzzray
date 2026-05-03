@@ -71,6 +71,30 @@ _MEMORY_REGION_RE = re.compile(
     r"(heap|stack|global|bss|mmap)[- ]", re.I
 )
 
+# Sanitizer backtrace frame: "#N 0xADDR in FuncName /abs/path/file.c:LINE"
+_SAN_FRAME_RE = re.compile(
+    r"#\d+\s+0x[0-9a-fA-F]+\s+in\s+([\w:~<>]+)\s+(/[^\s:]+):(\d+)",
+    re.M,
+)
+
+_SAN_NOISE_PREFIXES = (
+    "__sanitizer", "__asan", "__ubsan", "__msan", "__lsan", "__tsan",
+    "__interceptor_", "printf_common", "handleIntegerOverflow",
+    "handleDivremOverflow", "handleShiftOutOfBounds", "handleTypeMismatch",
+    "handleFloatCastOverflow", "handleImplicitConversion", "handleOutOfBounds",
+    "handleBuiltinUnreachable", "handleMissingReturn",
+)
+
+
+def first_user_loc_from_sanitizer(text: str) -> tuple[str | None, str | None]:
+    """Return (func, 'abs/path/file.c:line') from the first non-noise sanitizer frame."""
+    for m in _SAN_FRAME_RE.finditer(text):
+        func = m.group(1)
+        if any(func.startswith(n) for n in _SAN_NOISE_PREFIXES):
+            continue
+        return func, f"{m.group(2)}:{m.group(3)}"
+    return None, None
+
 
 def parse_sanitizer_output(text: str) -> tuple[dict[str, float], str | None]:
     """Return (CWE distribution, detected memory_region) from sanitizer output."""
