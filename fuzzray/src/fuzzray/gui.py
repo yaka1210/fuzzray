@@ -32,7 +32,7 @@ class FuzzRayApp(ctk.CTk):
         super().__init__()
         self.title("FuzzRay")
         self.geometry("700x780")
-        self.resizable(False, False)
+        self.resizable(True, True)
         self._build_ui()
 
     def _build_ui(self) -> None:
