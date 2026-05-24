@@ -42,7 +42,7 @@ class FuzzRayApp(ctk.CTk):
         ctk.CTkLabel(
             self, text="FuzzRay",
             font=ctk.CTkFont(family=FONT, size=22, weight="bold"),
-        ).grid(row=0, column=0, columnspan=2, pady=(18, 12), sticky="ew")
+        ).grid(row=0, column=0, columnspan=3, pady=(18, 12))
 
         self.theme_btn = ctk.CTkButton(
             self, text="Light", width=56, height=28,
@@ -50,7 +50,7 @@ class FuzzRayApp(ctk.CTk):
             command=self._toggle_theme,
             fg_color="gray25", hover_color="gray35",
         )
-        self.theme_btn.grid(row=0, column=2, padx=(0, 16), pady=(18, 12), sticky="e")
+        self.theme_btn.place(relx=1.0, x=-16, y=18, anchor="ne")
 
         pad = {"padx": 16, "pady": 1}
         lbl_font = ctk.CTkFont(family=FONT, size=13)
