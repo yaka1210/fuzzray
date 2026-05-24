@@ -3,10 +3,6 @@ make_pptx.py
 test1/
 test2/
 html/
-*.pptx
-*.docx
-*.txt
-bibliography.txt
 src/__pycache__/
 
 # Byte-compiled / optimized / DLL files

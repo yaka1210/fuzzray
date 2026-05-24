@@ -27,7 +27,7 @@ ERROR_SEVERITY: dict[str, str] = {
 SEVERITY_ORDER = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
 
-def prioritize(crashes: list[Crash]) -> None:
+def prioritize(crashes: list[Crash]) -> list[Crash]:
     for c in crashes:
         if c.top_cwe != "unknown":
             c.severity_level = CWE_SEVERITY.get(c.top_cwe, "MEDIUM")
@@ -38,3 +38,4 @@ def prioritize(crashes: list[Crash]) -> None:
         key=lambda c: (SEVERITY_ORDER.get(c.severity_level, 0), c.duplicate_count),
         reverse=True,
     )
+    return crashes

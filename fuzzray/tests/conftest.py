@@ -10,11 +10,11 @@ def afl_out(tmp_path: Path) -> Path:
     inst = tmp_path / "fuzzer01"
     (inst / "crashes").mkdir(parents=True)
     (inst / "queue").mkdir()
-    (inst / "crashes" / "id:000000,sig:11,src:000000,op:havoc,rep:4").write_bytes(b"AAAA" * 4)
-    (inst / "crashes" / "id:000001,sig:11,src:000000,op:havoc,rep:2").write_bytes(b"BBBB" * 4)
-    (inst / "crashes" / "id:000002,sig:06,src:000001,op:havoc,rep:1").write_bytes(b"CCCC" * 4)
-    (inst / "crashes" / "id:000003,sig:08,src:000002,op:havoc,rep:1").write_bytes(b"DDDD" * 4)
-    (inst / "crashes" / "id:000004,sig:11,src:000000,op:havoc,rep:4").write_bytes(b"AAAA" * 4)
+    (inst / "crashes" / "id_000000,sig_11,src_000000,op_havoc,rep_4").write_bytes(b"AAAA" * 4)
+    (inst / "crashes" / "id_000001,sig_11,src_000000,op_havoc,rep_2").write_bytes(b"BBBB" * 4)
+    (inst / "crashes" / "id_000002,sig_06,src_000001,op_havoc,rep_1").write_bytes(b"CCCC" * 4)
+    (inst / "crashes" / "id_000003,sig_08,src_000002,op_havoc,rep_1").write_bytes(b"DDDD" * 4)
+    (inst / "crashes" / "id_000004,sig_11,src_000000,op_havoc,rep_4").write_bytes(b"AAAA" * 4)
     (inst / "crashes" / "README.txt").write_text("ignored")
 
     (inst / "fuzzer_stats").write_text(

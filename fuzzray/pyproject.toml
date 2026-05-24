@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 fuzzray = "fuzzray.cli:app"
+fuzzray-gui = "fuzzray.gui:main"
 
 [project.optional-dependencies]
 dev = [
