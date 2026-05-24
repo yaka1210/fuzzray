@@ -36,11 +36,18 @@ class FuzzRayApp(ctk.CTk):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        scroll = ctk.CTkScrollableFrame(self)
+        scroll.grid(row=0, column=0, sticky="nsew")
+        scroll.grid_columnconfigure(1, weight=1)
+
+        f = scroll
 
         # Title row
         ctk.CTkLabel(
-            self, text="FuzzRay",
+            f, text="FuzzRay",
             font=ctk.CTkFont(family=FONT, size=22, weight="bold"),
         ).grid(row=0, column=0, columnspan=3, pady=(18, 12))
 
@@ -57,77 +64,77 @@ class FuzzRayApp(ctk.CTk):
         entry_font = ctk.CTkFont(family=FONT, size=13)
 
         # AFL++ dir
-        ctk.CTkLabel(self, text="Каталог AFL++ (--afl-out)", anchor="w",
+        ctk.CTkLabel(f, text="Каталог AFL++ (--afl-out)", anchor="w",
                      font=lbl_font).grid(row=2, column=0, columnspan=3, sticky="w", **pad)
         self.afl_out_var = ctk.StringVar()
-        ctk.CTkEntry(self, textvariable=self.afl_out_var, width=430,
+        ctk.CTkEntry(f, textvariable=self.afl_out_var, width=430,
                      font=entry_font).grid(row=3, column=0, columnspan=2, sticky="w", padx=16, pady=2)
-        ctk.CTkButton(self, text="Обзор...", width=90,
+        ctk.CTkButton(f, text="Обзор...", width=90,
                       font=ctk.CTkFont(family=FONT, size=13),
                       command=self._browse_afl).grid(row=3, column=2, padx=(4, 16), pady=2)
 
         # Output HTML
-        ctk.CTkLabel(self, text="HTML-отчет (-o)", anchor="w",
+        ctk.CTkLabel(f, text="HTML-отчет (-o)", anchor="w",
                      font=lbl_font).grid(row=4, column=0, columnspan=3, sticky="w", **pad)
         self.output_var = ctk.StringVar(value="fuzzray_report.html")
-        ctk.CTkEntry(self, textvariable=self.output_var, width=430,
+        ctk.CTkEntry(f, textvariable=self.output_var, width=430,
                      font=entry_font).grid(row=5, column=0, columnspan=2, sticky="w", padx=16, pady=2)
-        ctk.CTkButton(self, text="Обзор...", width=90,
+        ctk.CTkButton(f, text="Обзор...", width=90,
                       font=ctk.CTkFont(family=FONT, size=13),
                       command=self._browse_output).grid(row=5, column=2, padx=(4, 16), pady=2)
 
         # Target binary
-        ctk.CTkLabel(self, text="Целевой бинарный файл (--target, необяз.)", anchor="w",
+        ctk.CTkLabel(f, text="Целевой бинарный файл (--target, необяз.)", anchor="w",
                      font=lbl_font).grid(row=6, column=0, columnspan=3, sticky="w", **pad)
         self.target_var = ctk.StringVar()
-        ctk.CTkEntry(self, textvariable=self.target_var, width=430,
+        ctk.CTkEntry(f, textvariable=self.target_var, width=430,
                      font=entry_font).grid(row=7, column=0, columnspan=2, sticky="w", padx=16, pady=2)
-        ctk.CTkButton(self, text="Обзор...", width=90,
+        ctk.CTkButton(f, text="Обзор...", width=90,
                       font=ctk.CTkFont(family=FONT, size=13),
                       command=self._browse_target).grid(row=7, column=2, padx=(4, 16), pady=2)
 
         # Target args
-        ctk.CTkLabel(self, text="Аргументы цели (--target-args, @@ = путь к входу)", anchor="w",
+        ctk.CTkLabel(f, text="Аргументы цели (--target-args, @@ = путь к входу)", anchor="w",
                      font=lbl_font).grid(row=8, column=0, columnspan=3, sticky="w", **pad)
         self.target_args_var = ctk.StringVar(value="@@")
-        ctk.CTkEntry(self, textvariable=self.target_args_var, width=430,
+        ctk.CTkEntry(f, textvariable=self.target_args_var, width=430,
                      font=entry_font).grid(row=9, column=0, columnspan=2, sticky="w", padx=16, pady=2)
 
         # Jobs
-        ctk.CTkLabel(self, text="Параллельных GDB-воспроизведений (-j, 0 = авто)", anchor="w",
+        ctk.CTkLabel(f, text="Параллельных GDB-воспроизведений (-j, 0 = авто)", anchor="w",
                      font=lbl_font).grid(row=10, column=0, columnspan=3, sticky="w", **pad)
         self.jobs_var = ctk.StringVar(value="0")
-        ctk.CTkEntry(self, textvariable=self.jobs_var, width=80,
+        ctk.CTkEntry(f, textvariable=self.jobs_var, width=80,
                      font=entry_font).grid(row=11, column=0, sticky="w", padx=16, pady=2)
 
-        ctk.CTkLabel(self, text="", height=4).grid(row=12, column=0)
+        ctk.CTkLabel(f, text="", height=4).grid(row=12, column=0)
 
         cb_font = ctk.CTkFont(family=FONT, size=13)
 
         self.no_replay_var = ctk.BooleanVar(value=True)
-        ctk.CTkCheckBox(self, text="Без GDB-воспроизведения (--no-replay)",
+        ctk.CTkCheckBox(f, text="Без GDB-воспроизведения (--no-replay)",
                         font=cb_font, variable=self.no_replay_var).grid(
             row=13, column=0, columnspan=3, sticky="w", padx=16, pady=2)
 
         self.minimize_var = ctk.BooleanVar(value=False)
-        ctk.CTkCheckBox(self, text="Минимизировать входы через afl-tmin (--minimize)",
+        ctk.CTkCheckBox(f, text="Минимизировать входы через afl-tmin (--minimize)",
                         font=cb_font, variable=self.minimize_var).grid(
             row=14, column=0, columnspan=3, sticky="w", padx=16, pady=2)
 
         self.no_repro_var = ctk.BooleanVar(value=False)
-        ctk.CTkCheckBox(self, text="Не генерировать скрипты репродьюсеров (--no-reproducers)",
+        ctk.CTkCheckBox(f, text="Не генерировать скрипты репродьюсеров (--no-reproducers)",
                         font=cb_font, variable=self.no_repro_var).grid(
             row=15, column=0, columnspan=3, sticky="w", padx=16, pady=(2, 10))
 
         # Progress bar
-        self.progress = ctk.CTkProgressBar(self, width=648, mode="determinate")
+        self.progress = ctk.CTkProgressBar(f, width=648, mode="determinate")
         self.progress.grid(row=16, column=0, columnspan=3, padx=16, pady=(0, 4))
         self.progress.set(0)
         self._progress_step = 0
 
         # Run button
         self.run_btn = ctk.CTkButton(
-            self, text="  Запустить анализ",
+            f, text="  Запустить анализ",
             font=ctk.CTkFont(family=FONT, size=14, weight="bold"),
             height=42, width=300,
             command=self._run,
@@ -135,13 +142,13 @@ class FuzzRayApp(ctk.CTk):
         self.run_btn.grid(row=17, column=0, columnspan=3, pady=8)
 
         # Log
-        self.log = ctk.CTkTextbox(self, width=648, height=160, state="disabled",
+        self.log = ctk.CTkTextbox(f, width=648, height=160, state="disabled",
                                    font=ctk.CTkFont(family="Courier", size=11))
         self.log.grid(row=18, column=0, columnspan=3, padx=26, pady=(0, 8))
 
         # Open report button
         self.open_btn = ctk.CTkButton(
-            self, text="Открыть отчет", width=200,
+            f, text="Открыть отчет", width=200,
             font=ctk.CTkFont(family=FONT, size=13),
             state="disabled", command=self._open_report,
         )
