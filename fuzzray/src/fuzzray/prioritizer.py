@@ -4,14 +4,14 @@ from fuzzray.models import Crash
 
 CWE_SEVERITY: dict[str, str] = {
     "CWE-787": "CRITICAL",   # OOB Write
+    "CWE-121": "CRITICAL",   # Stack-based Buffer Overflow
+    "CWE-122": "CRITICAL",   # Heap-based Buffer Overflow
     "CWE-416": "CRITICAL",   # Use After Free
     "CWE-415": "HIGH",       # Double Free
     "CWE-125": "HIGH",       # OOB Read
     "CWE-476": "MEDIUM",     # NULL Pointer Dereference
     "CWE-190": "MEDIUM",     # Integer Overflow
-
     "CWE-369": "MEDIUM",     # Divide By Zero
-    "CWE-457": "MEDIUM",     # Uninitialized Variable
 }
 
 ERROR_SEVERITY: dict[str, str] = {
