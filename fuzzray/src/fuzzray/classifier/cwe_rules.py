@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 
 CWE_TITLES: dict[str, str] = {
+    "CWE-121": "Переполнение стекового буфера",
+    "CWE-122": "Переполнение буфера в куче",
     "CWE-787": "Запись за пределами буфера",
     "CWE-125": "Чтение за пределами буфера",
     "CWE-415": "Двойное освобождение памяти",
@@ -10,15 +12,20 @@ CWE_TITLES: dict[str, str] = {
     "CWE-476": "Разыменование нулевого указателя",
     "CWE-190": "Целочисленное переполнение",
     "CWE-369": "Деление на ноль",
-    "CWE-457": "Использование неинициализированной переменной",
     "unknown": "Не классифицировано",
 }
 
 ERROR_RECOMMENDATIONS: dict[str, str] = {
-    "ERROR_SEGFAULT": "Проверьте указатели и границы массивов. Соберите с -fsanitize=address для точного диагноза.",
+    "ERROR_SEGFAULT": (
+        "Проверьте указатели и границы массивов. "
+        "Соберите с -fsanitize=address для точного диагноза."
+    ),
     "ERROR_ABORT": "Проверьте assert-условия и операции с памятью (double-free, heap corruption).",
     "ERROR_BUSERROR": "Проверьте выравнивание структур и работу с mmap.",
-    "ERROR_ILL": "Недопустимая инструкция — часто UBSan trap. Соберите с -fsanitize=undefined для подробностей.",
+    "ERROR_ILL": (
+        "Недопустимая инструкция — часто UBSan trap. "
+        "Соберите с -fsanitize=undefined для подробностей."
+    ),
     "ERROR_FPE": "Проверьте операции деления: убедитесь, что делитель не равен нулю.",
     "ERROR_TIMEOUT": "Проверьте циклы и рекурсию на предмет бесконечных итераций.",
     "ERROR_UNKNOWN": "Соберите цель с -fsanitize=address,undefined и повторите анализ.",
@@ -114,9 +121,9 @@ def signal_to_cwe_prior(sig: int | None) -> dict[str, float]:
     if sig is None:
         return {"unknown": 0.5}
     if sig == 11:  # SIGSEGV
-        return {"CWE-787": 0.25, "CWE-125": 0.25, "CWE-476": 0.2, "unknown": 0.3}
+        return {"CWE-121": 0.15, "CWE-122": 0.15, "CWE-787": 0.15, "CWE-125": 0.2, "CWE-476": 0.2, "unknown": 0.15}
     if sig == 6:  # SIGABRT
-        return {"CWE-787": 0.3, "CWE-416": 0.3, "CWE-415": 0.2, "unknown": 0.2}
+        return {"CWE-121": 0.15, "CWE-122": 0.15, "CWE-787": 0.2, "CWE-416": 0.25, "CWE-415": 0.15, "unknown": 0.1}
     if sig == 8:  # SIGFPE
         return {"CWE-369": 0.7, "CWE-190": 0.2, "unknown": 0.1}
     if sig == 7:  # SIGBUS

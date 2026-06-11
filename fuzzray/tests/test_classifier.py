@@ -19,8 +19,27 @@ def test_sanitizer_heap_write() -> None:
         "WRITE of size 4 at 0xdeadbeef thread T0\n"
     )
     dist, region = parse_sanitizer_output(stderr)
-    assert dist.get("CWE-787", 0) > 0.9
+    assert dist.get("CWE-122", 0) > 0.9
     assert region == "heap"
+
+
+def test_sanitizer_stack_write() -> None:
+    stderr = (
+        "==1234==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7fff1234\n"
+        "WRITE of size 1 at 0x7fff1234 thread T0\n"
+    )
+    dist, region = parse_sanitizer_output(stderr)
+    assert dist.get("CWE-121", 0) > 0.9
+    assert region == "stack"
+
+
+def test_sanitizer_global_write_fallback() -> None:
+    stderr = (
+        "==1234==ERROR: AddressSanitizer: global-buffer-overflow on address 0x555555\n"
+        "WRITE of size 4 at 0x555555 thread T0\n"
+    )
+    dist, _ = parse_sanitizer_output(stderr)
+    assert dist.get("CWE-787", 0) > 0.9
 
 
 def test_sanitizer_heap_read() -> None:
