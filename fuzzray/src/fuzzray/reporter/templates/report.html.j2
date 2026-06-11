@@ -307,7 +307,7 @@
     {% endif %}
 
     {% if c.has_reproducer %}
-    <p class="min-info">Скрипт воспроизведения: <code class="ic">reproduce_{{ '%03d' % loop.index }}_{{ c.top_cwe.replace('-', '_') }}.sh</code> в каталоге репродьюсеров рядом с отчётом. Запуск: <code class="ic">bash reproduce_...sh</code>.</p>
+    <p class="min-info">Скрипт воспроизведения: <code class="ic">reproduce_{{ '%03d' % loop.index }}_{{ c.top_cwe.replace('-', '_') }}.sh</code> в каталоге репродьюсеров рядом с отчетом. Запуск: <code class="ic">bash reproduce_...sh</code>.</p>
     {% endif %}
 
     {% if c.gdb_output %}
@@ -390,15 +390,15 @@
 </p>
 <table>
   <tr><th>CWE</th><th>Название</th><th>Описание</th><th>Уровень</th></tr>
-  <tr><td><code>CWE-787</code></td><td>Запись за пределами буфера</td><td>Программа пишет данные за пределы или до начала отведённого буфера</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
-  <tr><td><code>CWE-416</code></td><td>Использование освобождённой памяти</td><td>Программа повторно использует или обращается к памяти после её освобождения</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
+  <tr><td><code>CWE-121</code></td><td>Переполнение стекового буфера</td><td>Программа записывает данные за пределы буфера, расположенного на стеке</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
+  <tr><td><code>CWE-122</code></td><td>Переполнение буфера в куче</td><td>Программа записывает данные за пределы буфера, выделенного в куче</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
+  <tr><td><code>CWE-787</code></td><td>Запись за пределами буфера</td><td>Программа пишет данные за пределы или до начала отведенного буфера</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
+  <tr><td><code>CWE-416</code></td><td>Использование освобожденной памяти</td><td>Программа повторно использует или обращается к памяти после ее освобождения</td><td><span class="badge CRITICAL">CRITICAL</span></td></tr>
   <tr><td><code>CWE-415</code></td><td>Двойное освобождение памяти</td><td>Программа дважды вызывает <code>free()</code> для одного и того же адреса памяти</td><td><span class="badge HIGH">HIGH</span></td></tr>
-  <tr><td><code>CWE-125</code></td><td>Чтение за пределами буфера</td><td>Программа читает данные за пределами или до начала отведённого буфера</td><td><span class="badge HIGH">HIGH</span></td></tr>
+  <tr><td><code>CWE-125</code></td><td>Чтение за пределами буфера</td><td>Программа читает данные за пределами или до начала отведенного буфера</td><td><span class="badge HIGH">HIGH</span></td></tr>
   <tr><td><code>CWE-476</code></td><td>Разыменование NULL</td><td>Программа разыменовывает указатель, который ожидался валидным, но оказался равным NULL</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
   <tr><td><code>CWE-190</code></td><td>Целочисленное переполнение</td><td>Программа выполняет вычисление, которое может вызвать целочисленное переполнение или зацикливание значения</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
-
   <tr><td><code>CWE-369</code></td><td>Деление на ноль</td><td>Программа делит значение на ноль</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
-  <tr><td><code>CWE-457</code></td><td>Неинициализированная переменная</td><td>Код использует переменную, которая не была инициализирована, что приводит к непредсказуемым результатам</td><td><span class="badge MEDIUM">MEDIUM</span></td></tr>
 </table>
 
 <h2>Справочник типов ошибок</h2>
@@ -416,7 +416,7 @@
 <!-- ===== Exploitability reference ===== -->
 <h2>Оценка эксплуатируемости</h2>
 <p style="font-size: 0.85rem; color: var(--text2); margin-bottom: 12px;">
-  Показывает, насколько уязвимость опасна на практике — может ли злоумышленник её использовать.
+  Показывает, насколько уязвимость опасна на практике — может ли злоумышленник ее использовать.
 </p>
 <table>
   <tr><th>Уровень</th><th>Описание</th></tr>
@@ -483,11 +483,11 @@
 <h2>Соответствие ГОСТ Р 56939-2024 «Защита информации. Разработка безопасного программного обеспечения. Общие требования»</h2>
 <div class="gost-box">
   <p style="font-size: 0.85rem; color: var(--text2); margin-bottom: 12px;">
-    Данный отчёт формирует артефакты, требуемые следующими пунктами стандарта:
+    Данный отчет формирует артефакты, требуемые следующими пунктами стандарта:
   </p>
   <ul>
     <li>
-      <span class="gost-check">[п. 5.11.3.6]</span> Отчёт по результатам фаззинг-тестирования —
+      <span class="gost-check">[п. 5.11.3.6]</span> Отчет по результатам фаззинг-тестирования —
       зафиксированы длительность тестирования, количество аварийных завершений работы ПО
       ({{ report.total_raw_crashes }}), количество найденных путей выполнения и результаты
       анализа аварийных завершений с классификацией по CWE.

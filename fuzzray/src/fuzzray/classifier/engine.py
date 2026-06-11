@@ -35,7 +35,7 @@ _UBSAN_HANDLER_CWE: dict[int, tuple[str, float]] = {
     3:  ("CWE-369", 0.8),    # DivremOverflow
     5:  ("CWE-190", 0.65),   # FloatCastOverflow — numeric range exceeded
     7:  ("CWE-190", 0.6),    # ImplicitConversion — lossy type conversion
-    10: ("CWE-457", 0.7),    # LoadInvalidValue — invalid bool/enum
+    10: ("CWE-476", 0.5),    # LoadInvalidValue — invalid bool/enum
     12: ("CWE-190", 0.75),   # MulOverflow
     13: ("CWE-190", 0.7),    # NegateOverflow
     16: ("CWE-476", 0.7),    # NonnullArg — null passed to nonnull param
