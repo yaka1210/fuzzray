@@ -38,7 +38,7 @@ _RULES: list[tuple[re.Pattern[str], str, float]] = [
     # Division by zero → CWE-369
     (re.compile(r"(?:integer[- ]divide[- ]by[- ]zero|float[- ]divide[- ]by[- ]zero|division by zero|divide by zero)", re.I), "CWE-369", 0.97),  # noqa: E501
 
-    # Out of bounds (read) → CWE-125
+    # Out of bounds — direction resolved later via source code; default to read (CWE-125)
     (re.compile(r"index\s+\S+\s+out of bounds for type", re.I), "CWE-125", 0.8),
 
     # NULL pointer issues → CWE-476
@@ -68,6 +68,36 @@ _RULES: list[tuple[re.Pattern[str], str, float]] = [
     (re.compile(r"__ubsan_handle_vla_bound_not_positive", re.I), "CWE-190", 0.75),
     (re.compile(r"__ubsan_handle_(?:load_invalid_value|invalid_builtin|builtin_unreachable|missing_return|alignment_assumption)", re.I), "CWE-476", 0.5),  # noqa: E501
 ]
+
+_OOB_UBSAN_RE = re.compile(r"index\s+\S+\s+out of bounds for type", re.I)
+
+
+def oob_direction_from_source(raw: str, source_line: str | None) -> str | None:
+    """Return 'write', 'read', or None for UBSan array-bounds crashes.
+
+    UBSan 'index N out of bounds for type T[N]' fires before the actual memory
+    access and does not indicate direction. We recover it from the source line:
+    if ] is followed by an assignment operator the access is a write (→ CWE-121),
+    otherwise a read (→ CWE-125, the default already set by _RULES).
+    """
+    if not _OOB_UBSAN_RE.search(raw):
+        return None
+    if not source_line:
+        return None
+    idx = source_line.find("]")
+    if idx == -1:
+        return None
+    after = source_line[idx + 1:].lstrip()
+    if not after:
+        return "read"
+    # compound assignment: +=, -=, *=, /=, %=, &=, |=, ^=
+    if re.match(r"[+\-*/%&|^]=", after):
+        return "write"
+    # simple assignment but not == comparison
+    if after[0] == "=" and (len(after) < 2 or after[1] != "="):
+        return "write"
+    return "read"
+
 
 _MEMORY_REGION_RE = re.compile(
     r"(heap|stack|global|bss|mmap)[- ]", re.I

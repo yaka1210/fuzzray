@@ -10,7 +10,7 @@ from fuzzray.classifier.cwe_rules import (
 )
 from fuzzray.classifier.exploitability import assess
 from fuzzray.classifier.gdb_runner import GdbResult, replay
-from fuzzray.classifier.sanitizer import first_user_loc_from_sanitizer, parse_sanitizer_output
+from fuzzray.classifier.sanitizer import first_user_loc_from_sanitizer, oob_direction_from_source, parse_sanitizer_output
 from fuzzray.classifier.source_snippet import extract_snippet
 from fuzzray.classifier.symbolizer import first_user_frame, symbolize, symbolize_backtrace
 from fuzzray.classifier.taxonomy import build_taxonomy
@@ -211,6 +211,15 @@ def _apply_gdb(
         crash.source_snippet = snippet.lines
         crash.source_snippet_file = snippet.file
         crash.source_snippet_crash_line = snippet.crash_line
+        # Refine UBSan array-bounds direction: default rule sets CWE-125 (read),
+        # but if source shows array[...] = ... it's a write → CWE-121 (stack array).
+        crash_src_line = next(
+            (txt for lno, txt in snippet.lines if lno == snippet.crash_line), None
+        )
+        direction = oob_direction_from_source(gdb.raw, crash_src_line)
+        if direction == "write":
+            dist.pop("CWE-125", None)
+            dist["CWE-121"] = max(dist.get("CWE-121", 0.0), 0.8)
 
     return sanitizer_region
 
